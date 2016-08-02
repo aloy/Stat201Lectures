@@ -1,0 +1,139 @@
+---
+title: "Stat 201 - Lecture 10"
+author: "Prof. Heggeseth"
+date: "October 15, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+----------
+
+#Babies
+
+Let's think about babies again.
+
+```{r, echo=FALSE}
+require(mosaic)
+par(mar=c(5,4,4,1)) #setting the margins of the plotting region
+load('~/Dropbox/Shared Files/Data sets/BABIES1998.Rda')
+babies1998dec <- babies1998[babies1998$dobmm == 12,] #[rows, columns]
+```
+
+```{r}
+with(babies1998dec,hist(gestation,xlab='Gestation (weeks)',main='1998 Population',xlim=c(15,50)))
+```
+
+Let's imagine that we were going to gather data by random sampling 100 babies and find the mean gestational age.
+
+We can simulate the sampling distribution by taking many random samples out of the population (all of size $n=100$).
+
+```{r}
+sampdist = do(1000)*with(sample(babies1998dec, 100), mean(gestation, na.rm = TRUE))
+hist(sampdist[,1],xlab='Mean Gestation (weeks)',main='Sampling Distribution')
+sd(sampdist[,1]) #measure of variability
+mean(sampdist[,1]) #practically the population mean
+(popmean = mean(babies1998dec$gestation,na.rm=TRUE))
+```
+
+----------
+
+#Bootstrap Confidence Intervals
+
+##One Sample from Population
+
+Imagine that we only had 1 sample of 100 babies (not the whole population). 
+
+```{r}
+require(mosaic)
+smp <- sample(babies1998dec, size = 100, replace = FALSE) #drawn from population without replacement
+```
+
+To get a sense of sampling variability, we would bootstrap this sample and make a 95% confidence interval. 
+
+```{r}
+boot1 = do(1000)*with(resample(smp),mean(gestation, na.rm = TRUE))
+(ci1 = quantile(boot1[,1],c(0.025,0.975)))
+ci1[2] - ci1[1] #width of the interval 
+(ci1[2] - ci1[1])/sd(boot1[,1]) #about 4 SD's wide
+sd(boot1[,1]) #An estimate of sampling variability
+mean(boot1[,1]) #C entered at the original sample mean (not population mean)
+```
+
+Does this interval contain the "true mean" gestational age of the population?
+
+```{r}
+popmean > ci1[1] & popmean < ci1[2]
+```
+
+----------
+
+#Bootstrap Confidence Intervals
+
+
+##Second Sample from Population
+
+Imagine that we only had a different sample of 100 babies (not the whole population). 
+
+```{r}
+smp2 <- sample(babies1998dec, size = 100, replace = FALSE) #drawn from population without replacement
+```
+
+To get a sense of sampling variability, we would bootstrap this sample and make a 95% confidence interval. 
+
+```{r}
+boot2 = do(1000)*with(resample(smp2),mean(gestation, na.rm = TRUE))
+(ci2 = quantile(boot2[,1],c(0.025,0.975)))
+ci2[2] - ci2[1] #width of the interval
+(ci2[2] - ci2[1])/sd(boot2[,1]) #about 4 SD's wide
+sd(boot2[,1]) #An estimate of sampling variability
+mean(boot2[,1]) #Centered at the original sample mean
+```
+
+Does this interval contain the "true mean" gestational age of the population?
+
+```{r}
+popmean > ci2[1] & popmean < ci2[2]
+```
+
+
+----------
+
+#Bootstrap Confidence Intervals
+
+
+##Third, Fourth, etc. Sample from Population
+
+Let's do this same process:
+
+- Take one sample from the population without replacement
+- Bootstrap that sample
+- Calculate 95% confidence interval
+- Check whether the true population mean is in that interval
+
+```{r}
+manysamples = function(){
+  smp <- sample(babies1998dec, size = 100, replace = FALSE) #drawn from population without replacement
+  boot = do(1000)*with(resample(smp),mean(gestation, na.rm = TRUE))
+  (ci = quantile(boot[,1],c(0.025,0.975)))
+  popmean > ci[1] & popmean < ci[2]
+}
+
+
+inCI = do(500)*manysamples() #takes a long time to run...
+
+prop.table(table(inCI)) #Percent of time our interval "captures" the true mean
+```
+
+Thus, we can only be 95% confident that the "true mean" of the population is in our interval. 
+
+- Some times it is, some times is it not (it depends on how "unusual" our sample is).
+- This interval is giving us some sense of what the "true mean" is, not individual data points. 
+
+Common Mistakes on Quiz:
+
+- 95% of the days, she'll sell between 47 and 50 cups of soup.
+- Each day she’ll sell between 47 and 49.5 soups per day.
+

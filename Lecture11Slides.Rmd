@@ -1,0 +1,241 @@
+---
+title: "Stat 201 - Lecture 11"
+author: "Prof. Heggeseth"
+date: "October 20, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+
+----------
+
+#Happy World Statistics Day!!
+
+https://worldstatisticsday.org/
+
+----------
+
+#Experimental Design Wrap Up
+
+Why run an experiment, in which we manipulate factors?
+
+
+----------
+
+#Experimental Design Best Practices
+
+**Replication**: Repeat your experimental condition on many subjects AND repeat your experiment on many different groups of people
+
+**Randomization**: To ensure fairness over factors we don't want to or can't control, we randomize.
+
+**Control**: Try and control all sources of variation (keep them constant) to make the conditions the same between treatment groups. Also, you need to have a control group for comparison (need for blinding, placebo, etc).
+
+**Blocking**: Sometimes, we want more control over how individual units are assigned to treatments than randomization can provide, so we can create blocks of homogeneous units and randomize treatments within each (similar to stratification for sampling). This often decreases the observed variability. 
+
+- Matching pairs is one example (e.g. Twin studies)
+
+
+Randomization and Controlling make it possible to make causal conclusions about treatments since the two comparison groups are similar in every respect except for the treatment (which we manipulate).
+
+----------
+
+#Probability (Chps 13 and 14)
+
+**What does it mean when we say something is random? What is a random phenomenon?**
+
+
+
+----------
+
+#Probability 
+
+##Terminology
+
+The **sample space** of a "random experiment" is the set of all possible outcomes (notated as $\bf{S}$).
+
+*e.g.* Suppose the random "experiment" is to count the number of times you have to stop for pedestrians while driving home. $S = \{0,1,2,3,\dots\}$
+
+An **event** **A** is a set of outcomes.
+
+*e.g* Let **A** be the event that the number of times you have to stop is at least 2: $\bf{A} = \{2,3,4,5,\dots\}$
+
+*e.g* Let **B** be the event that the number of times you have to stop is even:  $\bf{B} = \{0,2,4,\dots\}$
+
+
+##Notation
+We often use set notation when talking about events:
+
+$\bf{A} \cap \bf{B}$ is **A** *and* **B**
+
+$\bf{A} \cup \bf{B}$ is **A** *or* **B**  (inclusive OR - **A** only or **B** only or both)
+
+$\bf{A^c}$ is the complement (all the outcomes of **S**, not in **A**)
+
+$\bf{A} \subset \bf{B}$ **A** is in **B** (is a subset of **B**). All the outcomes of the event **A** are in the event **B**.
+
+*e.g.* The event (**A** and **C**) or (**B** and **C**) : $$(\bf{A} \cap \bf{C}) \cup (\bf{B} \cap \bf{C})$$
+
+
+---------------
+
+#Types of Probability
+
+##1. Empirical (long-run) Probability
+
+e.g. If I flip this coin many times, the long-run proportion of heads will be 0.5.
+
+```{r}
+require(mosaic)
+rflip(10)
+rflip(1000)
+rflip(10000)
+```
+
+**Law of Large Numbers**
+
+For most phenomena, the relative frequency of an event settles down in the long run to the probability. There are some exceptions (e.g. if the sequence of "trials" are not independent).
+
+$$P(\bf{A})=lim_{n \rightarrow \infty} \frac{\# ~times~~\bf{A}~~ occurs}{n}$$
+
+
+
+##2. Theoretical (model-based) Probability
+
+e.g. The coin is fair with two outcomes, thus the probability of heads is 0.5. 
+
+For **equally likely** outcomes, 
+
+$$P(\bf{A}) = \frac{\# ~ outcomes~ in ~\bf{A}}{\# ~outcomes~ in~ \bf{S}}$$
+
+With a deck of 52 cards,
+
+P(Ace with 1 draw) = ?
+
+P(Four of a Kind in 5-card poker) = ? 
+
+*Note: not all outcomes are equally likely. If you were playing basketball, what would be your chance of making a free-throw?*
+
+
+##3. Subjective Probability
+
+e.g. The election is a toss up (like tossing a coin); we don't know who will win!
+
+
+What does it mean when we say that the chance of winning the lottery is 1 in 175 million? What type of probability are we using?
+
+
+---------------------
+
+##Axioms of Probability 
+
+For any events **A** and **B**,
+
+- $P(\mathbf{A}) \ge 0$
+
+- $P(\mathbf{S}) = 1$ 
+
+* For disjoint events **A**, **B** (such that $\mathbf{A}\cap \mathbf{B} = \emptyset$), 
+\[P(\mathbf{A} ~or~ \mathbf{B}) = P(\mathbf{A}\cup \mathbf{B}) = P(\mathbf{A}) + P(\mathbf{B})\]
+
+**Proposition**: For any event **A**, $P(\mathbf{A}^c) = 1- P(\mathbf{A})$.
+
+
+---------------------
+
+##Probabilities from Contingency Tables
+
+Imagine we randomly selected a movie from this data set: 
+
+```{r}
+data(movies)
+moviedata = movies[movies$mpaa != "",]
+moviedata$mpaa = factor(moviedata$mpaa)
+with(moviedata, table(Comedy,mpaa))
+with(moviedata, table(Comedy))
+with(moviedata, table(mpaa))
+```
+
+Let **A** be the movie is a Comedy and **B** be the movie is R rated.
+
+
+- what is $P(A)$?
+
+- what is $P(A \cap B)$?
+
+- what is $P(A \cup B)$?
+
+- what is $P(A | B)$?
+
+
+
+
+------------------------
+
+##Probability Rules
+
+**General Addition Rule**
+
+**$P(A \cup B) = P(A) + P(B) - P(A \cap B)$**
+
+Proof:
+
+$$ A \cup B = (A \cap B^c) \cup (A \cap B) \cup (B \cap A^c) $$
+
+$$ P( A \cup B)= P(A \cap B^c) + P(A \cap B) + P(B \cap A^c)$$
+
+add and subtract $P(A \cap B)$
+
+$$ P( A \cup B)= P(A \cap B^c) + P(A \cap B) + P(B \cap A^c) + P(A \cap B) - P(A \cap B) $$
+
+but 
+
+$$ P(A) = P(A \cap B) + P(A \cap B^c) $$
+$$ P(B) = P(A \cap B) + P(B \cap B^c) $$
+
+so we have the result we wanted.
+
+------------
+
+##Multiplication
+
+Think back to the table:
+
+$$P(A ~| ~B) = \frac{P(A \cap B)}{P(B)}$$
+
+so 
+$$P(A \cap B) =  P(A ~| ~B) P(B)$$
+
+If $A$ and $B$ are **independent** then:
+
+$$P(A \cap B) = P(A)P(B)$$
+
+This is a mathmatical definition and is absolutely precise.
+Later in the course we'll test whether the probabilities are close enough to consider them as independent.
+
+**General Multiplication Rule**
+
+$$P(A \cap B) = P(A ~|~B) P(B)   = P(B~|~A) P(A) $$
+
+
+-------
+
+#Disjoint and Independent -- What's the difference?
+
+**Disjoint**:  Two events **A** and **B** are disjoint if $\bf{A} \cap \bf{B} = \emptyset$  and so $P(\bf{A} \cap \bf{B})=0$
+
+**Independent**: Two events **A** and **B** are **independent** if and only if $P(\bf{A} \cap \bf{B}) = \it{P}(\bf{A})\it{P}(\bf{B})$. Note that if  **A** and **B** are **independent**, then $P(\bf{A} ~| ~\bf{B}) = {P}(\bf{A})$ (plug in the above into definition of conditional probability).
+
+##Example
+Suppose **A**, **B**, **C**, **D** and **E** are the possible grades that your friend received in this course last semester. We might not know $P(\bf{B})$, but if I told you she got an **A**, what is $P(\bf{B})$ now?   
+Are these events independent?
+
+
+##Mathematically
+For disjoint sets **A** and **B**,   $P(\bf{A} \cap \bf{B})=0$ and so $\it{P}(\bf{A} | \bf{B})= \frac{\it{P}(\bf{A} \cap \bf{B})}{\it{P}(\bf{B})} =0 \ne {\it{P}(\bf{A})}$  and so they aren't independent.
+	
+Conversely, if two non-empty sets are independent, then they can't disjoint.  Why? Because if they are independent  $P(\bf{A} \cap \bf{B}) = P(\bf{A})P(\bf{B})$ which can't be 0 because both ${P(\bf{A}})$ and ${P(\bf{B}})~~\text{are} > 0$. And so $P(\bf{A} \cap \bf{B}) = \it{P}(\bf{A})\it{P}(\bf{B}) >0$ , which means that the intersection is non-empty and the two sets aren't disjoint. 
+
+

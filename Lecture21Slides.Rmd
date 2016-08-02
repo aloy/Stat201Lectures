@@ -1,0 +1,254 @@
+---
+title: "Stat 201 - Lecture 21"
+author: "Prof. Heggeseth"
+date: "December 3, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+
+--------------
+
+# xtable
+
+In the HW, you'll notice we used xtable() to make pretty tables in the homework write up. You need to install.packages('xtable').
+
+- xtable() takes an R table and can spit out html code to make a table or latex code to make a table.
+- Trick: At the beginning of the R code chunk, use {r results="asis"} to see the pretty table. 
+
+You don't need to use xtable for the homework. 
+
+
+--------------
+
+# Next Week and Beyond
+
+- HW17 is the last homework (due tonight)
+- Tuesday is Presentation Day!
+    - Send me Rmarkdown slides (use my lecture notes as template) before 10:00am on Tuesday so I can get them all up on my computer. 
+    - I'll randomly select an order.
+    - 4 minutes - very strict.
+    - If we run out of time, the last groups will go at the beginning on Thursday. 
+    - Office hours or email me questions!
+- Thursday is a semester review and SCS forms.
+- Final Exam: Dec 16th 1:30 - 4pm in Chem 123 (just our section - other section will be in another room)
+    - Note sheet: 1 piece of paper (both sides)
+    - Multiple choice and short answer (like quiz)
+    - We'll post some practice problems
+
+
+--------------
+
+# Quick Review
+
+**"Classical" Cases/Situations we've discussed:**
+
+- $\hat{p}$ (Normal sampling distribution model)
+- $\hat{p}_1-\hat{p}_2$ (Normal sampling distribution model)
+- $\bar{y}$ (Student T sampling distribution model)
+- $\bar{y}_1 - \bar{y}_2$ (Student T sampling distribution model)
+- $\overline{y_{1}-y_{2}}$ in pairs (Student T sampling distribution model)
+- F statistic = $\frac{(SST-SSE)}{SSE}$ (F sampling distribution model)
+    - $SST$: sum of squared total $\sum (y_i -\bar{y})^2$
+    - $SSE$: sum of squared error $\sum (y_i -\hat{y}_i)^2$
+- $\sum \frac{(O_i - E_i)^2}{E_i}$ in a Contingency table (Chi Squared sampling distribution model)
+
+**"Classical" Cases/Situations we will discuss today:**
+
+- $\sum \frac{(O_i - E_i)^2}{E_i}$ in a Contingency table (Chi Squared sampling distribution model)
+- $\sum \frac{(O_i - E_i)^2}{E_i}$ in a Frequency table (Chi Squared sampling distribution model)
+- Regression Coefficients, $b_j$, (Student T sampling distribution model)
+
+
+--------------
+
+#Contingency Tables
+
+- Summarizes relationship between two categorical variables (each has at least two categorical levels)
+- Take a moment to think: **In a table with R rows and C columns, how many values in the table can vary if we know the row and column totals?**
+    - This value is the degrees of freedom you should use for a Chi Squared model. 
+
+```{r,echo=FALSE}
+x = seq(0,50,by=.01)
+plot(x,dchisq(x,df = 2),type='l',ylab='f(x)',xlab='x',col=rainbow(6)[1],main='Chi Squared Model')
+lines(x,dchisq(x,df = 5),col=rainbow(6)[2])
+lines(x,dchisq(x,df = 10),col=rainbow(6)[3])
+lines(x,dchisq(x,df = 15),col=rainbow(6)[4])
+lines(x,dchisq(x,df = 20),col=rainbow(6)[5])
+lines(x,dchisq(x,df = 30),col=rainbow(6)[6])
+legend('topright',legend=paste('df = ',c(2,5,10,15,20,30)),col=rainbow(6),lty=1)
+```
+    
+- The test statistic we use to summarize all of the values in a table is
+$$ \sum{\frac{(O_i-E_i)^2}{E_i}}$$
+
+    
+**Technical Side Note**
+
+- Even though it doesn't look like it on the surface, $\sum{\frac{(O_i-E_i)^2}{E_i}}$ is like a sum of squared z-scores; the z-scores are approximately Normal if the sample size is large. 
+    - You can think of $O_i$ as being Poisson...
+    - Mathematical details are beyond the scope of this course (involving Multinomial distribution). 
+- This is how a Chi-Squared model is defined: a sum of squared standard Normal variables. 
+
+
+
+-------------
+
+#Another Example
+The book differentiates between a **Chi-square Test of Independence** and a **Chi-square Test for Homogeneity**, but the mechanics are the same.
+
+- Homogeneity: Many samples (represented by one "categorical variable"), analyze one categorical variable
+    - Example: Swarthmore, Amherst, Williams (we wouldn't have gotten these three schools randomly sampling the college student population in the US)
+- Independence: One sample, analyze two categorical variables
+    - Example: Disease and Genotype (below)
+
+
+Here's a test of independence on *Disease rate* and *Genotype*
+
+```{r results="asis",echo=FALSE}
+require(xtable)
+disease=matrix(c(268,199,42,807,759,184),ncol=2)
+rownames(disease)=c("ins/ins","ins/del","del/del")
+colnames(disease)=c("No Disease","Coronary Heart Disease")
+disease=data.frame(disease)
+print(xtable(disease, digits=c(0,0,0)), type="html")
+```
+
+```{r}
+chisq.test(disease)
+```
+
+----------
+
+#Another Case: Chi-square Goodness of fit
+
+Finally, the Chi square test can be used in a different context -- to test whether a model fits the data by comparing the observed counts and comparing it to what you'd expect from its probability mass function (pmf). 
+
+**For example, are the digits of Pi uniformly distributed?**
+
+Here are the frequencies of the digits 0-9 for the first 1,000,000 digits of pi. 
+
+```{r}
+digitsofpi=scan("http://sites.williams.edu/rdeveaux/files/2014/09/Digitsofpi.txt")
+barplot(table(digitsofpi),col="lightblue")
+table(digitsofpi)
+sum((table(digitsofpi)-100000)^2/100000)
+chisq.test(table(digitsofpi))
+```
+
+This is called the **Chi-square Goodness of Fit Test**.
+
+----------
+
+#Another Case: Regression
+
+**Flash from the Past!**
+
+Back in Lecture 8 (!), we fit the following regression model with indicator variables and interaction terms,
+
+\[ \widehat{Weight} = b_0 + b_1 Age + b_2 1_{Female}+ b_3 1_{Female}*Age\]
+
+
+```{r}
+load('Kids198.rda')
+colpalette = c('blue','red')
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)',pch=19)
+lm.fit = lm(Weight~Age*Sex, data = Kids198)
+abline(a = coef(lm.fit)[1],b = coef(lm.fit)[2],col='blue',lwd=3)
+abline(a = coef(lm.fit)[1]+coef(lm.fit)[3],b = coef(lm.fit)[2]+coef(lm.fit)[4],col='red',lwd=3)
+summary(lm.fit)
+```
+
+For this sample of kids, we see a difference in growth between boys and girls. 
+
+**Is this a "real difference" in that there is a difference in the larger population of kids?**
+
+Let's imagine that in the larger population, the weight of a child at a specific age can be described by a sex-specific linear function plus some deviation
+
+\[ Weight = \beta_0 + \beta_1 Age + \beta_2 1_{Female}+ \beta_3 1_{Female}*Age + \epsilon\]
+
+*If you haven't noticed, we like to use Greek letters for population parameters and Latin letters for sample statistics.*
+
+During that lecture earlier in the semester, we bootstrapped our sample to get a sense of sampling variability.
+
+```{r}
+require(mosaic)
+bootlm = do(1000)*lm(Weight~Age*Sex,data=resample(Kids198))
+par(mfrow=c(2,2))
+hist(bootlm[,1],xlab='Male Intercept',main='')
+hist(bootlm[,2],xlab='Male Slope',main='')
+hist(bootlm[,3],xlab='Difference in Intercept (Female - Male)',main='')
+hist(bootlm[,4],xlab='Difference in Slopes (Female - Male)',main='')
+quantile(bootlm[,1],c(0.025,0.975))
+quantile(bootlm[,2],c(0.025,0.975))
+quantile(bootlm[,3],c(0.025,0.975))
+quantile(bootlm[,4],c(0.025,0.975))
+sd(bootlm[,1])
+sd(bootlm[,2])
+sd(bootlm[,3])
+sd(bootlm[,4])
+```
+
+Now, if we assume that the deviations (or errors), $\epsilon$, are approximately Normal in the population, then the sampling distribution of $b_0$, $b_1$, $b_2$, and $b_2$ are all approximately Normal and we use Student T model when we estimate the SE. 
+
+- Notice the standard errors for each coefficient (compare the sd of the bootstrap with the SE)
+- Notice the t-value for each coefficient 
+\[t = \frac{b_j - 0}{SE(b_j)} \]
+- Notice the p-value for each coefficient (Pr(>|t|))
+
+```{r}
+summary(lm.fit)
+```
+
+There are four p-values and thus four tests here. **What do you think the $H_0$ is for each of them?**
+
+
+----------
+
+#Using Hypothesis Tests for Model Selection
+
+Which physical measurements are good predictors of body fat percentage?
+
+```{r}
+bodyfat = read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/bodyfat.txt")
+summary(lm(Pct.BF ~ .,data=bodyfat))
+```
+
+How did we interpret these coefficients? 
+
+- The predicted change in Y (body fat percentage) for a 1 unit increase in X, keeping all other variables fixed (so after accounting for the other variables in the model).
+
+
+How do we use these hypothesis tests to choose a model?
+
+- We could either start with all variables in the model (above) and remove variables that aren't significantly different form 0 or we could either start with each variable on its own in the model (below) and add significant variables, 
+
+```{r}
+pvalues = matrix(0,nrow=ncol(bodyfat)-1,ncol=1)
+rownames(pvalues) = names(bodyfat)[-1]
+for(i in 1:(ncol(bodyfat)-1))
+pvalues[i-1] = coef(summary(lm(formula(paste('Pct.BF ~ ',names(bodyfat)[1+i])),data=bodyfat)))[2,4]
+pvalues[order(pvalues),]
+```
+
+Let's put Wrist in and then try all of them again...
+
+```{r}
+pvalues = matrix(0,nrow=ncol(bodyfat)-2,ncol=1)
+rownames(pvalues) = names(bodyfat)[-c(1,14)]
+for(i in 1:(ncol(bodyfat)-2))
+pvalues[i-1] = coef(summary(lm(formula(paste('Pct.BF ~ Wrist +',rownames(pvalues)[i])),data=bodyfat)))[3,4]
+pvalues[order(pvalues),]
+```
+
+This could be tedious.. either direction we go. Let's try a very different approach, a random forest (details left out on purpose, so that you'll want to take more stat classes)...to get a sense of which variables are most important.
+
+```{r}
+require(randomForest)
+varImpPlot(randomForest(Pct.BF~., data = bodyfat,importance=TRUE))
+```
+
+

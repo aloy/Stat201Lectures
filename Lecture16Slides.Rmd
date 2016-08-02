@@ -1,0 +1,269 @@
+---
+title: "Stat 201 - Lecture 16"
+author: "Prof. Heggeseth"
+date: "November 7 and 8, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+--------------
+
+#Quiz/Midterm Topics
+
+- Sampling
+- Study Design
+- Probability Rules
+    - Basic Counting
+    - Bayes Rule
+    - Independence v. Disjoint
+- Random Variables
+    - Def of E(X), Var(X), SD(X), Cov(X,Y)
+    - Properties (scaling, shifting, sums)
+    - Bernoulli, Binomial, Geometric, Poisson, any given
+    - Continuous RV (pdf, cdf) v. Discrete RV (pmf)
+    - Uniform, Normal, any given
+    - Approximations to Binomial
+- Sampling Distributions
+    - CLT
+    
+
+
+--------------
+
+#Betting Example
+
+An American roulette wheel has 38 slots, 18 are red, 18 are black, and 2 are green.
+
+![](http://www.topcasinooffers.com/images/game_specific/american-wheel.png)
+
+I am going to always bet on red and I am going to play for about 2 hours, about 120 times. 
+
+**Imagine that you were taking a quiz, how would you figure out the likelihood that I win at least 50 times?**
+
+
+
+
+--------------
+
+#Normal Approximation of Binomial
+
+Let $X$ be a Binomial Random Variable and $Y$ be a Normal Random Variable.
+
+As $n\rightarrow \infty$ ($p$ is fixed), the $P(X = x) \approx P(x-0.5 \leq Y \leq x+0.5)$. 
+
+*Note: adding and subtracting 0.5 is the continuity correction*
+
+```{r}
+n = 120
+p = 18/38
+barplot(dbinom(0:120,size = n, p = p),names.arg=0:n,ylab='Probability',main='n = 120, p = 18/38')
+```
+
+If $n=120$ and $p=18/38$, let's compare $P(X=50)$ and $P(49.5\leq Y\leq 50.5)$.
+```{r}
+dbinom(50,size = n, p = p)
+pnorm(50.5,mean = n*p, sd = sqrt(n*p*(1-p))) - pnorm(49.5,mean = n*p, sd = sqrt(n*p*(1-p)))
+```
+
+If $n=120$ and $p=18/38$, let's compare $P(X\geq 50)$ and $P(Y \geq 49.5)$.
+
+```{r}
+sum(dbinom(50:120,size = n, p = p)) #exact probability
+1 - pnorm(49.5,mean = n*p, sd = sqrt(n*p*(1-p)))  #approximate probability
+
+n*p - sqrt(n*p*(1-p)) #50 is close to 1 SD(X) below the E(X)
+
+0.5 + 0.68/2 #using 68-95-99.7 Rule (a ballpark figure)
+
+```
+
+###How big does n have to be?
+
+How big does $n$ have to be for the Normal approximation to be appropriate? 
+
+Rule of Thumb: $np \geq 10$ and $n(1-p)\geq 10$ because that makes sure that $E(X)-0>3SD(X)$ (mean is at least 3 SD's from 0).
+
+For $p=18/38$, that means that $n\geq 22$.
+
+```{r}
+n = 22
+p = 18/38
+barplot(dbinom(0:n,size = n, p = p),names.arg=0:n,ylab='Probability',main='n = 22, p = 18/38')
+```
+
+
+
+
+--------------
+
+#Switch to Means
+
+Say we have a sequence of independent and identically distributed (iid) random variables, $X_1,...,X_n$, 
+
+*(I don't know what their probability model is but $E(X_i) = \mu$ and $Var(X_i) = \sigma^2$ for $i=1,...,n$)*
+
+In your homework, you need to show, 
+
+\[E\left(\frac{1}{n}\sum_{i=1}^n X_i\right) = \mu\]
+
+\[Var\left(\frac{1}{n}\sum_{i=1}^n X_i\right) = \frac{\sigma^2}{n}\]
+
+
+But, what is the distribution (probability model) of $\frac{1}{n}\sum_{i=1}^n X_i$?
+
+
+--------------
+
+#Central Limit Theorem
+
+Say we have a sequence of independent and identically distributed (iid) random variables, $X_1,...,X_n$, and we calculate the mean, $\frac{1}{n}\sum_{i=1}^n X_i$.
+
+Let's subtract the expected value, $\mu$, and scale by $\sqrt{n}$, such that we have a new random variable,
+
+\[C_n = \sqrt{n}\left(\frac{1}{n}\sum_{i=1}^n X_i - \mu\right) \]
+
+Then, the Central Limit Theorem says that for any $c \in \mathbb{R}$,
+\[\lim_{n\rightarrow\infty}P(C_n \leq c) = P(Y \leq c)\]
+where $Y$ is a Normal RV with $E(Y) = 0$ and $Var(Y) = \sigma^2$.
+
+
+--------------
+
+#Central Limit Theorem
+
+##What does this mean?
+
+If $n$ is large enough, 
+
+- Sample Sum, $S = \sum^n_{i=1} X_i$, is approximately a Normal RV with $E(S) = n\mu$ and variance $Var(S) = n\sigma^2$
+- Sample Mean, $\bar{X} = \frac{1}{n}\sum^n_{i=1} X_i$, is approximately a Normal RV with $E(\bar{X}) = \mu$ and variance $Var(\bar{X}) = \frac{\sigma^2}{n}$
+- Standardized Sample Mean, $Z = \frac{\bar{X} - \mu}{\sigma/\sqrt{n}}$, is approximately a Normal RV with $E(Z) = 0$ and variance $Var(Z) = 1$
+
+
+Then, we can use the Normal cdf (pnorm) to calculate any probabilities that we would ever need. 
+
+--------------
+
+#Central Limit Theorem & Binomial
+
+A Binomial RV $X$ is a sum of Bernoulli RV's where $X_i = 1$ or $0$. 
+
+\[X = \sum_{i=1}^n X_i\]
+
+- According to the CLT, the Binomial RV $X$ (a sample sum) will be approximately Normal if $n$ is large enough. 
+
+The proportion of successes based on a Binomial RV is 
+\[ \hat{p} = \frac{X}{n} = \frac{1}{n}\sum_{i=1}^n X_i\]
+
+- According to the CLT, the proportion based on the Binomial RV $\frac{X}{n}$ (a sample mean) will be approximately Normal if $n$ is large enough. 
+
+
+
+--------------
+
+#Connection to Sampling Distributions
+
+Imagine randomly sampling $n$ people from a population. 
+
+- Let $X_1$ be the response from the first randomly selected person. 
+- Let $X_2$ be the response from the second randomly selected person. 
+- Let $X_n$ be the response from the nth randomly selected person. 
+
+**If we sample from a population without replacement (simple random sampling), are these RV's independent?**
+
+--------------
+
+#Connection to Sampling Distributions
+
+##Independence
+
+Remember our definition of independence, $P(X_1 = x_1\text{ and }X_2 = x_2) = P(X_1 = x_1)P(X_2 = x_2)$ or in other words, $P(X_1 = x_1 | ~ X_2 = x_2) = P(X_1 = x_1)$. 
+
+- **If we had $N$ individuals in the population, what is the chance we pick an individual with $x_1$ as their value on the first pick? **
+
+- **If we had $N$ individuals in the population, what is the chance we pick an individual with $x_2$ as their value on the second pick? **
+
+- **If we had $N$ individuals in the population, what is the chance we pick an individual with $x_n$ as their value on the $n$th pick? **
+
+Rule of Thumb: For our draws without replacement to be approximately independent, we want $n < 0.1N$.
+
+--------------
+
+#Connection to Sampling Distributions
+
+##Sample Statistics
+
+Then, the sample mean (in terms of RV's) is $\frac{1}{n}\sum^n_{i=1}X_i$ (sample sum is $\sum^n_{i=1}X_i$).
+
+Thus, we know that the sampling distribution of sample means (or sample sums) will be approximately Normal by CLT.
+
+*Note: The CLT doesn't tell us about the sampling distribution about other statistics (medians, IQR, etc).*
+
+--------------
+
+#Bootstrap v. Theoretical
+
+##Back to Trump
+###Bootstrapping
+Back in August, a poll said that out of a sample of registered "Republicans" ($n=474$), 32% favored Trump. 
+
+We bootstrapped our sample to get a sense of sampling variability. 
+
+```{r}
+require(mosaic)
+trump.sample <- c(rep('Favor',round(.32*474)), rep('Do not',round(.68*474)))
+table(trump.sample)
+
+sample.props <- do(2500)*prop.table(table(resample(trump.sample)))[2]
+
+hist(sample.props[,1],xlab='Sample Proportion who Favors Trump',main='Bootstrap Sampling Distribution')
+favstats(sample.props[,1])
+```
+
+###Theoretical
+
+Now, thinking theoretically, if $p$ is the proportion of the entire population (registered Republicans) who favor Trump (in August),
+
+- What is the expected sample proportion, $E(\frac{1}{n}\sum_{i=1}^n X_i)$, where $X_i = 1$ if the $i$th sampled person favored Trump, 0 otherwise?
+
+- What is the variance of a sample proportion, $Var(\frac{1}{n}\sum_{i=1}^n X_i)$? $SD(\frac{1}{n}\sum_{i=1}^n X_i)$?
+
+- What is the probability model of the sample proportion, $\frac{1}{n}\sum_{i=1}^n X_i$?
+
+```{r,echo=FALSE}
+p = seq(0.2,.8,by=.01)
+plot(p,dnorm(p,mean = 0.5,sd = sqrt(0.5*0.5/50)),type='l',xaxt='n',yaxt='n',bty='n',ylab='',xlab='Sample Proportions',main = 'If n is large, Sampling Distribution of Proportions\n (Normal by CLT)' ) #Theoretical Model
+abline(h=0)
+segments(.5,-.1,.5,.1)
+mtext('p',side=1,line=.1,cex=.8)
+segments(.5+sqrt(.5*.5/50),-.1,.5+sqrt(.5*.5/50),.1)
+mtext('p + SD',side=1,line=.1,at=.5+sqrt(.5*.5/50),cex=.8)
+segments(.5-sqrt(.5*.5/50),-.1,.5-sqrt(.5*.5/50),.1)
+mtext('p - SD',side=1,line=.1,at=.5-sqrt(.5*.5/50),cex=.8)
+segments(.5+2*sqrt(.5*.5/50),-.1,.5+2*sqrt(.5*.5/50),.1)
+mtext('p + 2SD',side=1,line=.1,at=.5+2*sqrt(.5*.5/50),cex=.8)
+segments(.5-2*sqrt(.5*.5/50),-.1,.5-2*sqrt(.5*.5/50),.1)
+mtext('p - 2SD',side=1,line=.1,at=.5-2*sqrt(.5*.5/50),cex=.8)
+```
+
+```{r}
+qqnorm(sample.props[,1],main='Bootstrap Sampling Distribution') #Bootstrap Model (compared to Normal)
+qqline(sample.props[,1])
+```
+
+BUT, we don't know $p$ in practice (that is why we are polling people). 
+
+We can estimate $SD(\frac{1}{n}\sum_{i=1}^n X_i)$ by plugging in our best guess, $\hat{p} = 0.32$, from our sample, to get the **standard error**,
+
+\[ SE(\frac{1}{n}\sum_{i=1}^n X_i) = \widehat{SD}(\frac{1}{n}\sum_{i=1}^n X_i)\]
+
+```{r}
+sqrt(.32*(1-.32)/474) #Theoretical SE
+sd(sample.props[,1]) #Bootstrap SE
+```
+
+
+

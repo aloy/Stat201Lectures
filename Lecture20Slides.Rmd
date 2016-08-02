@@ -1,0 +1,351 @@
+---
+title: "Stat 201 - Lecture 20"
+author: "Prof. Heggeseth"
+date: "December 1, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+--------------
+
+#More Hypothesis Testing
+
+- Experimental data with blocking
+    - Paired data (Chp 23)
+- Comparing many means
+    - Adjust Type 1 error rate (pg 765)
+    - Analysis of Variance (Chp 26)
+- Compare more than 2 proportions
+    - Tests of independence and homogeneity (Chp 25)
+    - Goodness of Fit tests (Chp 25)
+ 
+For all of these, we have $H_0$ and $H_A$, a test statistic, the sampling distribution for the test statistic, and a p-value. 
+
+--------------
+
+#An experiment
+
+**Finger Tapping**
+
+In 1994, Scott and Chen published research that compared the effects of caffein with those of theobromine (a similar chemical found in chocolate) and with those of a placebo. The experiment used 4 human subjects, and took place over several days. 
+
+Each day, each subject swallowed a tablet containing one of caffeine, theobromine, or the placebo. 
+
+Two hours later, they were timed while tapping a finger in a specified manner (they had practiced earlier). The resopnse is the number of taps in a fixed time interval. 
+
+```{r}
+load('Fingers.rda')
+head(Fingers)
+```
+
+- 4 subjects (each subject is a block)
+- 3 treatment groups (Placebo, Caffeine, Theobromine)
+- Response: Finger Tapping Rate
+
+
+--------------
+
+#An experiment: One T-Test    
+
+Question 1: Does caffeine speed up the tapping rate over the placebo?
+
+\[H_0: \mu_{Caffeine} = \mu_{Placebo}\]
+\[H_A: \mu_{Caffeine} \not= \mu_{Placebo}\]
+
+Test statistic: $\bar{y}_{Caf} - \bar{y}_{Pla}$ or the standardized difference in  means
+
+What assumptions need to hold for us to use the Student's T model?
+
+```{r, tidy=TRUE}
+require(mosaic)
+mean(TapRate~Drug,data = Fingers)
+39-22 #ybar1 - ybar2
+t.test(Fingers$TapRate[Fingers$Drug == 'Caffeine'],Fingers$TapRate[Fingers$Drug == 'Placebo']) #standard t-test
+```
+
+**Main Issue:** These tapping rates in the groups are not independent! They are taken from the same individual!
+
+
+If they were independent, then we would expect no pattern in the following plot.
+
+```{r}
+plot(Fingers$TapRate[Fingers$Drug == 'Caffeine'],Fingers$TapRate[Fingers$Drug == 'Placebo'])
+```
+
+The place where we used this assumption was in calculating the variance (and standard error), 
+
+\[Var(\bar{y}_{Caf} - \bar{y}_{Pla}) = Var(\bar{y}_{Caf}) + Var(\bar{y}_{Pla}) \]
+
+but now, if they aren't independent, then 
+
+\[Var(\bar{y}_{Caf} - \bar{y}_{Pla}) = Var(\bar{y}_{Caf}) + Var(\bar{y}_{Pla}) - 2Cov(\bar{y}_{Caf},\bar{y}_{Pla}) \]
+
+Rather than adjusting the variance, we could take differences within individuals,
+
+```{r}
+t.test(Fingers$TapRate[Fingers$Drug == 'Caffeine'],Fingers$TapRate[Fingers$Drug == 'Placebo'],paired=TRUE)
+```
+
+In this case, our data is **paired** so we can't just use a standard t-test due to the assumptions not holding. We used a **paired t-test**.
+
+This is why it is VERY IMPORTANT TO CONSIDER THE ASSUMPTIONS of classical hypothesis tests!
+
+
+--------------
+
+#An experiment: Multiple T-Tests   
+
+Question 2: Does caffeine speed up the tapping rate over the placebo? What about theobromine? How do the caffeine and theobromine compare?
+
+Here we have three tests.
+
+\[H_0: \mu_{Caffeine} = \mu_{Placebo}\]
+\[H_0: \mu_{Theobromine} = \mu_{Placebo}\]
+\[H_0: \mu_{Caffeine} = \mu_{Theobromine}\]
+
+```{r}
+t.test(Fingers$TapRate[Fingers$Drug == 'Caffeine'],Fingers$TapRate[Fingers$Drug == 'Placebo'],paired=TRUE)
+```
+
+```{r}
+t.test(Fingers$TapRate[Fingers$Drug == 'Theobromine'],Fingers$TapRate[Fingers$Drug == 'Placebo'],paired=TRUE)
+```
+
+```{r}
+t.test(Fingers$TapRate[Fingers$Drug == 'Caffeine'],Fingers$TapRate[Fingers$Drug == 'Theobromine'],paired=TRUE)
+```
+
+If we used a threshold of $\alpha = 0.05$ for all of these tests, what is the chance that I make at least one Type 1 error?
+
+\[P(\text{at least one Type 1 error}) = 1 - P(\text{no Type 1 errors}) \]
+\[= 1 - P(\text{no Type 1 error for one test})^3 \]
+\[= 1 - (1-\alpha)^3 \]
+\[= 1 - (1-0.05)^3 \]
+
+```{r}
+1 - (1-0.05)^3
+```
+
+If we were looking at 15 tests (comparing all pairs of 6 stimulants),
+
+```{r}
+1 - (1-0.05)^15
+```
+
+--------------
+
+#Another data set: Multiple T-Tests  
+
+```{r, include=FALSE,echo=FALSE}
+library(mosaic)
+teachers=read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/teacher.txt")
+```
+
+Here are data from evaluations of 15 teachers on a scale from 1 to 20 by eight independent judges:
+
+```{r}
+boxplot(Score~Teacher,data=teachers,col=shuffle(rainbow(15)))
+```
+
+The standard t-tests show that there are some "significant" differences:
+
+```{r}
+options(width=130)
+with(teachers,pairwise.t.test(Score,Teacher,p.adjust.method="none"))
+sort(mean(Score~Teacher,data=teachers))
+```
+
+**So what would you conclude? Would you fire one or more of the teachers?**
+
+**What possible errors are you making and what are the consequences of these decisions?**
+
+
+**How do we control these possible errors?**
+
+- One Approach
+    - Adjust p-values
+        - Bonferroni Correction
+        - Tukey
+        - Many others that try to control the "Family-wise Error Rate" (at least one Type 1 error) 
+
+- Another Approach
+     - Analysis of Variance F-test
+        - $H_0: \mu_1 = \mu_2 = \mu_3 = \cdots = \mu_k$ with $\alpha$ as threshold.
+        - In practice, just like fitting a multiple regression with dummy variables for groups.
+        
+```{r}
+lm.1=lm(Score~Teacher,data = teachers)
+summary(lm.1)
+plot(residuals(lm.1)~predict(lm.1)) #check for equal variance and linearity
+anova(lm.1)
+summary(aov(lm.1))
+```
+
+Notice that the P-value is 0.323; this is not small enough to reject $H_0$. We don't have enough evidence for differences between teachers. 
+
+With a P-value like this (after looking at boxplots to check assumptions), there’s no reason to try a modified pairwise set of t-tests. 
+
+However, if this test does show evidence of some differences, then you are justified in running multiple comparisons (with appropriate P-value adjustment) on all the pairs.
+
+*NOTE: The teacher data are not paired. If we were to do analysis of variance on the paired data, we would need to account for this lack of independence.*
+
+--------------
+
+#Another data set: Comparing Two Proportions
+
+Let's look at our survey data. 
+
+Is there a difference in the proportion of men and women that play a varsity sport??
+
+```{r}
+survey=read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/Survey.13-15.txt")
+```
+
+```{r}
+table(survey$Varsity,survey$Sex)
+table(survey$Sex)
+prop.table(table(survey$Varsity))
+```
+
+What would this table look like if $Sex$ and $Varsity$ were independent?
+
+What numbers would you expect to see?
+
+
+```{r,echo=FALSE}
+chivs=chisq.test(table(survey$Varsity,survey$Sex),correct=FALSE)
+chivs$expected
+```
+ 
+We'd expect the same overall proportion of No and Yes in both Female and Male columns (0.61, 0.38).
+
+
+Let's compare the expected numbers with those that we observed in the table,
+
+- Take difference between observed and expected
+- Square the difference
+- Divide each difference with the expected value (like standardizing it with respect to magnitudes)
+- Add all of them together (X-squared value)
+
+
+```{r}
+chivs=chisq.test(table(survey$Varsity,survey$Sex),correct=FALSE)
+sum((chivs$observed-chivs$expected)^2/chivs$expected)
+```
+
+Theoretical Sampling Distribution: Chi-squared distribution
+
+```{r,echo=FALSE}
+x = seq(0,20,by=.01)
+plot(x,dchisq(x,df = 2),type='l',ylab='f(x)',xlab='x')
+```
+
+**What kind of properties does this sampling distribution model have? **
+
+```{r}
+chivs
+```
+
+
+--------------
+
+#Another data set: Comparing More than Two Proportions
+
+Suppose we have $k$ different groups/populations and we want to know if $p_1 = p_2 = ... = p_k$. 
+
+This is called a **Test of Homogeneity of Groups**. For example, is the proportion of science majors the same at Swarthmore, Williams and Amherst? 
+
+Let's look at some hypothetical data:
+
+```{r results="asis",echo=FALSE}
+library(xtable)
+science=matrix(c(100,150,200,400,350,300,500,500,500),byrow=T,ncol=3)
+colnames(science)=c("Swarthmore","Amherst","Williams")
+rownames(science)=c("Science","Non-Science","Total")
+science=data.frame(science)
+print(xtable(science, digits=c(0,0,0,0)), type="html")
+```
+
+The test statistic is pretty logical. If the proportions were the same, we'd expect to see:
+
+```{r results="asis",echo=FALSE}
+expect=matrix(c(150,150,150,350,350,350,500,500,500),byrow=T,ncol=3)
+colnames(expect)=c("Swarthmore","Amherst","Williams")
+rownames(expect)=c("Science","Non-Science","Total")
+expect=data.frame(expect)
+print(xtable(expect, digits=c(0,0,0,0)), type="html")
+```
+
+The first table (without the totals) contains the **observed** values, $O_i$. The second one contains the **expected** values $E_i$. We take
+
+$$ \sum{\frac{(O_i-E_i)^2}{E_i}}$$
+
+If this is too big then the observed are too far away from the expected values.
+
+This table has $2$ degrees of freedom. **Why?**
+
+Compare to a $\chi^2_2$.
+
+```{r}
+chi=sum(((science[1:2,]-expect[1:2,])^2)/expect[1:2,])
+chi
+x = seq(0,20,by=.01)
+plot(x,dchisq(x,df = 2),type='l',ylab='f(x)',xlab='x')
+1-pchisq(chi,2)
+```
+
+We can have more than two categories in both the rows and columns.
+
+```{r results="asis"}
+socscience=matrix(c(100,150,200,150,200,100,250,150,200,500,500,500),byrow=T,ncol=3)
+colnames(socscience)=c("Swarthmore","Amherst","Williams")
+rownames(socscience)=c("Science","Arts","Social Science","Total")
+socscience=data.frame(socscience)
+print(xtable(socscience, digits=c(0,0,0,0)), type="html")
+chisq.test(socscience)
+```
+
+Same test. Now the degrees of freedom are $(r-1) \times (c-1)$. 
+
+-------------
+
+##Another Test
+
+When the rows and columns both signify representative values from two variables (measured on the same population), we call this a **Chi-square Test of Independence**, but the mechanics are the same as the Test for Homogeneity. 
+
+Here's a test of independence on *Disease rate* and *Genotype*
+
+```{r results="asis",echo=FALSE}
+disease=matrix(c(268,199,42,807,759,184),ncol=2)
+rownames(disease)=c("ins/ins","ins/del","del/del")
+colnames(disease)=c("No Disease","Coronary Heart Disease")
+disease=data.frame(disease)
+print(xtable(disease, digits=c(0,0,0)), type="html")
+```
+
+```{r}
+chisq.test(disease)
+```
+
+----------
+
+##Last Test: Chi-square Goodness of fit
+
+Finally, the Chi square test can be used in a different context -- to test whether a model fits by looking at its pmf. For example, are the digits of Pi uniformly distributed? 
+
+Here are the frequencies of the digits 0-9 for the first 1,000,000 digits of pi. 
+
+```{r}
+digitsofpi=scan("http://sites.williams.edu/rdeveaux/files/2014/09/Digitsofpi.txt")
+barplot(table(digitsofpi),col="lightblue")
+table(digitsofpi)
+sum((table(digitsofpi)-100000)^2/100000)
+chisq.test(table(digitsofpi))
+```
+
+This is called the **Chi-square Goodness of Fit Test**.
+
+

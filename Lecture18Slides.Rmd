@@ -1,0 +1,367 @@
+---
+title: "Stat 201 - Lecture 18"
+author: "Prof. Heggeseth"
+date: "November 19, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+--------------
+
+#Decision Making
+
+In research and in life, we often need to **make decisions based on evidence** (which can take many forms).
+
+####Concrete Examples
+- Medical tests (to diagnosis)
+- Court cases (to convict)
+- Compare two interventions (to change policy)
+- Choosing what to do with your time (to live)
+
+How we make these decisions is that we **weigh the options and the consequences** of making one decision over the other. 
+
+
+--------------
+
+#Consequences and Errors
+
+In some of these cases, there is an **unknown truth** that we'd like to know. 
+
+- Whether or not you have the disease
+- Whether or not the person is guilty
+- Whether or not a new intervention is better than status quo
+
+####Errors
+
+So in making a decision, we could make **two types of errors.**
+
+- Conclude guilty when the person is innocent.
+- Conclude not guilty when the person is guilty.
+
+OR
+
+- Conclude that you have the disease when you don't.
+- Conclude that you don't have the disease when you do.
+
+**How would you weigh these two errors??**
+
+
+--------------
+
+#Thresholds
+
+####Disease = Diabetes
+Imagine we have two groups of people, those with diabetes and those without. 
+
+- Fasting glucose levels are often used to diagnose diabetes (Threshold: > 126 mg/dl)
+- Let's assume the distribution of glucose levels are roughly Normal within each group.
+
+```{r,echo=FALSE,fig.width=5,fig.height=4}
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=126,lty=2)
+text(160,.005,'Diabetic')
+text(80,.005,'Not Diabetic')
+```
+
+How often are we making each type of error?
+
+```{r,echo=FALSE,fig.width=10,fig.height=4}
+par(mfrow=c(1,2))
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Positives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=126,lty=2)
+x1 = seq(126,200,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 85,sd = 20),rep(0,length(x1))),col='red',border=NA)
+
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Negatives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=126,lty=2)
+x1 = seq(30,126,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 150,sd = 20),rep(0,length(x1))),col='lightblue',border=NA)
+```
+
+What would happen if we lowered the diagnosis threshold to 110 mg/dl?
+
+
+```{r,echo=FALSE,fig.width=10,fig.height=4}
+par(mfrow=c(1,2))
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Positives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=110,lty=2)
+x1 = seq(110,200,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 85,sd = 20),rep(0,length(x1))),col='red',border=NA)
+
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Negatives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=110,lty=2)
+x1 = seq(30,110,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 150,sd = 20),rep(0,length(x1))),col='lightblue',border=NA)
+```
+
+
+What would happen if we increased the diagnosis threshold to 140 mg/dl?
+
+
+```{r,echo=FALSE,fig.width=10,fig.height=4}
+par(mfrow=c(1,2))
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Positives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=140,lty=2)
+x1 = seq(140,200,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 85,sd = 20),rep(0,length(x1))),col='red',border=NA)
+
+x = seq(30,200,by=1)
+plot(x,dnorm(x,mean = 85,sd = 20),type='l',col='red',bty='n',yaxt='n',ylab='',xlab='Fasting Gluclose levels',main='False Negatives')
+lines(x,dnorm(x,mean = 150,sd = 20),col='lightblue')
+abline(v=140,lty=2)
+x1 = seq(30,140,by=1)
+polygon(c(x1,rev(x1)),c(dnorm(x1,mean = 150,sd = 20),rep(0,length(x1))),col='lightblue',border=NA)
+```
+
+--------------
+
+#Hypothesis Testing
+
+In these circumstances, we are comparing two hypotheses.
+
+- Disease v. No Disease
+- Guilty v. Not Guilty
+- New intervention is better v. New and Old are Same
+
+Let's take the "boring one" and make that our **Null Hypothesis** ($H_0$).
+
+- $H_0:$ No Disease
+- $H_0:$ Not Guilty
+- $H_0:$ New and Old are Same
+
+Let's take the "newsworthy one" and make that our **Alternative Hypothesis** ($H_A$).
+
+- $H_A:$ Disease
+- $H_A:$ Guilty
+- $H_A:$ New intervention is better
+
+
+*Note: While some of these particular hypothesis are unique to individuals, we will generally think of hypotheses as being about a larger population in general*
+
+--------------
+
+#Decisions and Errors
+
+We will need to decide between these two hypotheses, but we may be wrong.
+
+**Type 1 Error:** Reject $H_0$ in favor of $H_A$ when it is actually true.
+
+- False Positive
+- Convict an innocent person
+- Change interventions even though it isn't better
+
+**Type 2 Error:** Fail to reject $H_0$ when $H_0$ is actually false. 
+
+- False Negative
+- Fail to convict a guilty person
+- Don't change interventions even though it is better
+
+*Note: In statistical practice, we only reject or not reject $H_0$ based on evidence (we can't accept anything).*
+
+--------------
+
+#How to make these decisions?
+
+We need evidence! We need data! 
+
+**Statistical evidence:** Our observed data in the context of randomness **assuming $H_0$ is true**. 
+
+####Randomness from Random Sampling 
+
+Context: Sampling distribution based on all possible random samples assuming $H_0$ is true.
+
+
+####Randomness from Randomization in Experiments
+
+Context: "Sampling" distribution based on all possible random assignments assuming $H_0$ is true.
+
+
+###Making the Decision
+- Think of the likelihood of seeing our observed data if $H_0$ were true. 
+- If that likelihood is small, reject $H_0$. If not, don't reject $H_0$. 
+
+**P-value**: Probability of getting a statistic as or more extreme than observed assuming $H_0$ is true (calculated from the sampling distribution).
+
+For most circumstances, the following notation will hold,
+
+\[\text{P-value} = P(|X - E(X)| > |x_{obs} - E(X)| ~|~ H_0 \text{ is true}) \]
+
+- What is small enough? 
+    - Smaller than an thoughtfully chosen threshold, $\alpha$ (you have to weigh the consequences of the two errors when choosing this threshold)
+
+
+-------------
+
+#P-values
+
+ASA Working Definition: The p-value is defined as the probability, under a specified mathematical model, of a statistical summary being equal to or more extreme than its observed value.
+
+####Some Important Principles to Keep in Mind
+
+1. P-values can indicate how well the data agree with **specific assumptions**.
+2. P-values **do not** measure the probability of truth, or whether a set of data were produced by chance alone.
+3. Scientific conclusions and related decisions should not be based **only** on whether a p-value passes a specific threshold.
+4. Proper inference requires full reporting and transparency (provide the test statistics and p-value, not just whether or not it was below a threshold).
+5. A p-value, or statistical significance, does not convey the **importance** of a result (Practical v. Statistical Significance).
+6. By itself, a p-value near 0.05 offers only **weak evidence** against the null hypothesis.
+
+Funny Movie: https://www.youtube.com/watch?v=ax0tDcFkPic
+
+--------------
+
+#Examples
+
+##Comparing two means
+
+**Are women literally hotter than men?**
+
+Observed data ($n$ = 150): body temperatures for men and women
+```{r}
+require(mosaic)
+bodytemp = read.table('http://www.amstat.org/publications/jse/datasets/normtemp.dat.txt')
+names(bodytemp) = c('temp','sex','hr')
+bodytemp$sex = factor(bodytemp$sex)
+levels(bodytemp$sex) = c("Males","Females")
+boxplot(temp~sex,data=bodytemp)
+mean(temp~sex,data=bodytemp)
+var(temp~sex,data=bodytemp)
+table(bodytemp$sex)
+```
+####Hypotheses
+$H_0$: Mean body temperature is the same between men and women (in the larger population), $\mu_{M} = \mu_{F}$
+
+$H_A$: Mean body temperature is not the same between men and women (in the larger population), $\mu_{M} \not= \mu_{F}$
+
+####Test Statistic (summary of data)
+Difference in Means
+\[ (\bar{x}_M-\bar{x}_F) = (98.1-98.4) = -0.3 \]
+
+Standardized difference in means based on $H_0$
+
+\[t = \frac{(\bar{x}_M-\bar{x}_F) - (\mu_{M} - \mu_{F})}{SE(\bar{x}_M-\bar{x}_F)} = \frac{(98.1-98.4) - 0}{0.126} = -2.28\]
+
+where $SE(\bar{x}_M-\bar{x}_F) = \sqrt{SE(\bar{x}_M)^2 + SE(\bar{x}_F)^2} = \sqrt{\frac{0.488}{65} + \frac{0.553}{65}}$ *what is this assuming?*
+
+```{r}
+s2 = var(temp~sex,data=bodytemp)
+se = sqrt(s2[1]/65 + s2[2]/65)
+diffmean(temp~sex,data=bodytemp)/se
+```
+
+####Sampling Distribution
+
+- Shuffle based on $H_0$ (conditions: randomness, independent draws)
+
+```{r message=FALSE}
+tempdiff = do(1000)*diffmean(temp~shuffle(sex),data=bodytemp)
+hist(tempdiff[,1],xlab='Mean Differences',main='Simulated Sampling Distribution based on Shuffling Sex')
+obsdiff = diffmean(temp~sex,data=bodytemp)
+points(obsdiff,0,pch=17)
+```
+
+- Or use theoretical Student's t model based on $H_0$ with complicated calculated degrees of freedom (conditions: randomness, independent draws, Normal populations)
+
+
+####P-value using sampling distribution
+
+\[P( |T| > |t_{obs}| \;\; |  \; \; H_0)\]
+
+```{r}
+mean(abs(tempdiff[,1]) > abs(obsdiff)) #based on simulated distribution assuming H0
+t.test(temp~sex,data=bodytemp) #based on theoretical distribution assuming H0
+```
+
+####Conclusion
+
+- P-value in context: Assuming the males and females have the same mean body temperature, the probability of seeing mean differences this large or larger than the observed data is fairly small (p-value = 0.02).
+- Reject or not reject based on some threshold $\alpha$: For $\alpha$ of 0.05, we can reject $H_0$ that males and females have the same mean body temperature in this population.
+- Conclude in context: We have fairly strong evidence to suggest that the mean body temperatures differ between men and women (assuming our sample is representative of the larger population). 
+
+--------------
+
+#Examples
+
+##Testing a Frequency Model
+
+###Mendel's Law of Segregation
+
+- If you have two parents who are carriers of the Sickle Cell allele (AS), by Mendel's law of segregation, there is a 25% chance a child will have sickle cell disease (very bad disease), 50% chance of being a carrier and 25% of being perfectly healthy.
+- Over the years, researchers have noticed that there is a higher proportion of AS (sickle cell carriers) individuals in these moist lowlands of Africa where there is a high risk for malaria exposure.
+
+**Do the genotype frequencies for sickle cell disease follow Mendelian Genetics?**
+
+Observed Data ($n$ = 500): Healthy (AA): 139, Sickle Cell Carriers (AS): 279, Sickle Cell (SS): 82
+
+####Hypotheses
+$H_0$: Claim is true; frequencies in entire population reflect Mendel's law of segregation, $p_{AA} = 0.25$, $p_{AS} = 0.5$, $p_{SS} = 0.25$
+
+$H_A$: Claim is not true; frequencies in entire population do not reflect Mendel's law of segregation, $p_{AA} \not= 0.25$ or $p_{AS} \not= 0.5$ or $p_{SS} \not= 0.25$
+
+####Test Statistic (summary of data)
+Chi squared statistic combines observed frequencies (COUNTS) and expected frequencies based on $H_0$
+
+\[\chi^2 = \frac{(O_{AA} - E_{AA})^2}{E_{AA}}+\frac{(O_{AS} - E_{AS})^2}{E_{AS}}+\frac{(O_{SS} - E_{SS})^2}{E_{SS}} \]
+\[= \frac{(139 - 0.25*500)^2}{0.25*500}+\frac{(279 - 0.5*500)^2}{0.5*500}+\frac{(82 - 0.25*500)^2}{0.25*500}\]
+
+####Sampling Distribution
+
+- Simulate based on $H_0$ (conditions: randomness, independent draws)
+
+```{r message=FALSE}
+require(mosaic)
+n <- 500 
+expected <- c(0.25, 0.5, 0.25) * n
+mendelpop <- sample(c('AA','AS','SS'),50000, prob = c(0.25, 0.5, 0.25), replace = TRUE)
+simchi <- do(10000) * sum((table(sample(mendelpop, n)) - expected)^2/expected )
+obschi <- sum((c(139,279,82) - expected)^2/expected)
+hist(simchi[,1],xlim=c(0,20),main='Simulated \n Sampling Distribution',xlab='Chi Square Statistic')
+points(obschi,0,pch=17)
+```
+
+- Or use theoretical $\chi^2$ model with df = # categories - 1 (conditions: randomness, independent draws, all expected counts $\geq$ 5)
+
+```{r}
+x = seq(0,50,by=0.1)
+plot(x,dchisq(x,df = 2),type='l',col=2,xlab='Chi Square Statistic',ylab='',main='Chi Square Models')
+lines(x,dchisq(x,df = 10),col=3)
+lines(x,dchisq(x,df = 15),col=4)
+lines(x,dchisq(x,df = 30),col=5)
+legend('topright',lty=1,col=2:5,legend=c('df = 2','df = 10','df = 15','df = 30'))
+```
+
+####P-value using sampling distribution
+
+\[P(\;\chi^2 > \chi^2_{obs} |  \; \; H_0)\]
+
+```{r}
+mean(simchi[,1] > obschi) #based on simulated distribution assuming H0
+1 - pchisq(obschi,df = 3 - 1) #based on theoretical distribution assuming H0
+```
+
+####Conclusions
+
+- P-value in context: Assuming the Mendelian law of segregation holds, the probability of seeing differences this large or larger between the observed data the frequency model is practically zero.
+- Reject or not reject based on some threshold $\alpha$: For any reasonable $\alpha$ of 0.01 or 0.001, we can safely reject $H_0$ that the Mendelian law of segregation holds in this population.
+- Conclude in context: Children who have sickle cell disease (SS) have a lethal disease and will be less likely to survive regardless of where they live. But researchers have realized that children with sickle cell trait (AS) have two advantages: they have a greater resistance to malaria, and they normally do not show symptoms of sickle cell disease. Thus, Darwin's "Survival of the Fittest" wins over Mendelian genetics!
+
+
+---------------
+
+#Be Careful: P-values
+
+http://fivethirtyeight.com/features/science-isnt-broken/

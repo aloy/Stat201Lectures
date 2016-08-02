@@ -1,0 +1,151 @@
+---
+title: "Stat 201 - Lecture 13"
+author: "Prof. Heggeseth"
+date: "October 29, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+
+
+----------
+
+#Bernoulli Trials
+
+**Three conditions**
+
+- Independent Trials (result of one trial does not impact probabilities on next trial)
+- Two possible outcomes on each trial (success or failure)
+- P(success) = p is constant
+
+**Geometric RV**: $X$ is the number of trials to the first success
+
+- pmf: $P(X = x) = (1-p)^{x-1}p$
+
+**Binomial RV**: $X$ is the total number of success in $n$ trials
+
+- What is the probability mass function (pmf) of a Binomial? (HW problem)
+
+
+###Why are these important to understand generally?
+
+- Imagine we have a population in which $p = 0.3$ proportion favor Trump (in general, we don't know $p$). We could complete $n=100$ "roughly independent" trials of drawing an individual from the population. 
+    - What is the probability that we get 40 individuals that favor Trump? 
+    - What is the probability that we get 40 or more individuals that favor Trump? 
+
+```{r}
+choose(100,40)*0.3^40*(1-0.3)^60
+dbinom(40, size = 100, prob = 0.3)
+
+sum(dbinom(40:100, size = 100, prob = 0.3))
+```
+
+----------
+
+#Bayes Rule Break from RV
+
+
+Let's say that you are going to get a medical/drug test (e.g. Fetal DNA test for chromosomal abnormalities). 
+
+http://www.npr.org/sections/health-shots/2015/01/26/368449371/dna-blood-test-gives-women-a-new-option-for-prenatal-screening
+
+http://www.panoramatest.com/en/healthcare-provider/our-science
+
+Sensitivity: P(+ result $|$ Disease)
+
+False Positive Rate: P(+ result $|$ No Disease)
+
+
+**If I had gotten a positive test result for Trisomy 21, what is the chance that my child actually has Down's syndrome, knowing that the chance of Down's in a child to a 30 year old mother is 1 in 1000?**
+
+```{r}
+Pdown = 1/1000
+PposgivenD = 0.99
+PposgivenDc = 0.05
+Pnotdown = 1-Pdown
+
+(PposgivenD * Pdown)/((PposgivenD * Pdown) + PposgivenDc * Pnotdown)
+```
+
+----------
+
+#Moment of Discrete Random Variables
+- Expected Value: long-run average
+\[ E(X) = \sum_{\text{all } x}xp_X(x)\]
+
+- Expected Value of a function of $X$
+\[ E(g(X)) = \sum_{\text{all } x}g(x)p_X(x)\]
+\[ E(X^2) = \sum_{\text{all } x}x^2p_X(x)\]
+
+- Variance: variability of a random variable
+\[ Var(X) = E((X - E(X))^2) = E(X^2) - [E(X)]^2\]
+
+
+##Example 1
+
+Which of the following investment strategies would you pick?
+
+1. No risk: 3% guaranteed
+2. Low risk: P(1%) = 0.3, P(2%) = 0.2, P(4%) = 0.2, P(5%) = 0.3
+3. High risk: P(-17%) = 0.3, P(-7%) = 0.2, P(13%) = 0.2, P(23%) = 0.3
+
+Find the expected return for each. 
+
+##Example 2
+
+What is $E(X)$ for a Bernoulli trial?
+
+What is $Var(X)$ for a Bernoulli trial?
+
+-----------
+
+#Properties of Moments
+
+Let $a$ and $b$ be constant (not random).
+
+\[ E(aX) = aE(X)\]
+
+\[ E(X + b) = \sum_{\text{all }x} (x+b)p_X(x) = \sum_{\text{all }x} xp_X(x) + \sum_{\text{all }x} bp_X(x)  = E(X) + b\]
+
+\[ Var(aX)  = a^2Var(X)\]
+
+\[ Var(X + b)  = Var(X) \]
+
+
+--------------
+
+#Two RV's
+
+Let $X$ and $Y$ be RV's.
+
+
+The **joint probability mass function** for two random variables is
+
+\[p_{X,Y}(x,y) = P(X = x \text{ and }Y=y) \]
+
+##Example 
+
+Flip a coin 5 times. Let $X$ be the number of heads. Let $Y$ be the difference between the number of heads and tails. **What is the joint probability model?**
+
+##Moments of Sums
+
+\[E_{X,Y}(X+Y) = \sum_{\text{all }x}\sum_{\text{all }y}(x+y)p_{X,Y}(x,y) = E_X(X)+E_Y(Y)\]
+
+\[Var_{X,Y}(X+Y) = Var(X)+Var(Y)\text{ if }X\text{ and } Y\text{ are independent }\]
+
+Proof for $E(X+Y)$:
+
+\[E_{X,Y}(X+Y) = \sum_{\text{all }x}\sum_{\text{all }y}(x+y)p_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}\sum_{\text{all }y}xp_{X,Y}(x,y)+\sum_{\text{all }x}\sum_{\text{all }y}yp_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}x\sum_{\text{all }y}p_{X,Y}(x,y)+\sum_{\text{all }y}y\sum_{\text{all }x}p_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}xp_{X}(x)+\sum_{\text{all }y}yp_{Y}(y)\]
+\[ = E(X)+E(Y)\]
+since  
+\[\sum_{\text{all }x}p_{X,Y}(x,y) = \sum_{\text{all }x}P(X = x\text{ and }Y=y)\]
+\[= \sum_{\text{all }x}P(X = x~|~Y=y)P(Y=y)\]
+\[= P(Y=y)\sum_{\text{all }x}P(X = x~|~Y=y)\]
+\[= P(Y=y)=p_Y(y)\]
+

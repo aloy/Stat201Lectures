@@ -1,0 +1,225 @@
+---
+title: "Stat 201 - Lecture 1"
+author: "Prof. Heggeseth"
+date: "September 10, 2015"
+output: slidy_presentation
+---
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',
+                      echo=TRUE, warning=FALSE, message=FALSE,tidy=TRUE)
+```
+
+#Course Info
+**More details in syllabus on [GLOW](glow.williams.edu)**
+
+Prof. Brianna Heggeseth
+
+bch2@williams.edu
+
+Bronfman 287 (x5029)
+
+##How to chat with me?
+
+- Email (until 10pm)
+- Scheduled Office Hours: Monday, Wednesday 2-3pm, Tuesday 3-4pm
+- Schedule a meeting with me
+- Invite me to coffee or dinner
+
+#Who else can help?
+
+- Your TA's: Bryan and Kelly
+- De Veaux's TA's: Lia and Richard
+- TA Sessions: Sun, Mon, Tues, Weds 8-10 pm Bronfman 119
+
+#Assessments
+##Reading Quizzes
+- Online quizzes that you can complete **as many times as you would like** and the highest grade will be recorded. 
+- You should work alone on these quizzes. 
+- Goal: Become familiar with the basic vocabulary before class to get the most out of the time in lecture.
+
+##Homework
+- Homework will be assigned and submitted on GLOW.
+-  Some problems (but not all) each week are selected (often at random) to be graded.
+- Discuss and work on homework with your classmates, but you must submit your own write-up and obtain your own computer code and output.
+- Complete all your homework in **RMarkdown**
+
+#Should you do the homework?
+Check out a **scatterplot** of homework and final exam grades for past courses.
+
+```{r}
+dat = read.csv('grades.csv')
+plot(dat$Homework,dat$Final,pch=19)
+```
+
+#Should you do the homework?
+Check out a **scatterplot** of homework and final exam grades for past courses.
+
+```{r }
+plot(dat$Homework,dat$Final,xlim=c(0.8,1),ylim=c(.6,1),pch=19)
+```
+
+#Assessments
+##Exams
+- Two midterms (in-class and take-home portion for each)
+- Final exam (in-class cumulative)
+
+Exams will make up 80% of your grade.
+
+
+**Read the rest of the syllabus online for more infomation**
+
+#You are Hired
+##Thought Experiment
+The City of San Francisco hires you as a consultant to provide concrete guidelines to help them use their resources more effectively and efficiently to reduce crime.
+
+
+##Data
+You have access to all reported crimes in the city of SF since 2003 (available at: https://data.sfgov.org/Public-Safety/SFPD-Incidents-from-1-January-2003/tmnf-yvry).
+
+- What are the **cases** (what do the rows represent)?
+- What **variables** do we have (what characteristics do we have on each case)?
+- Are the variables **categorical** (values that are names of categories) or **quantitative** (measured numerical values with units)?
+
+
+#First Step 
+
+- With someone next to you, come up with 5 specific research questions that you want to address with the data. 
+- Share your ideas with the class!
+
+#Explore Data for 2014
+
+Typically the most interesting (and most relevant) questions involve more than one variable, but let's start with one variable at a time.
+
+Go to: http://galileo.williams.edu:3838/users/bch2/SFCrimeEDA (This is a Shiny App made in RStudio, the software that we will be using; all graphs made using R)
+
+Be patient as it loads (it is a large data set).
+
+- Click through the different variables; there are appropriate graphics and numerical for that type of variable (categorical or quantitative). **What did you learn?**
+
+- Now click on Bivariate Exploration. Explore the different combinations of variables. **What did you learn?**
+
+#Explore Data for 2014
+
+Go to: http://galileo.williams.edu:3838/users/bch2/SFCrimeMap
+
+- Click through Points, Neighborhoods, and Heat Map. **Are there more questions that you have thought of?**
+- You can filter the data and look at subsets (by day of the week, time of day, Crime Type, etc.). 
+
+**Over the weekend, explore this data set and think about guidelines for the SF Police Department. We'll come back to this data set.**
+
+#Key Concepts
+
+**Interesting relationships involve more than one or even two variables.**
+
+First, we will talk about summarizing 1-2 variables. 
+
+#Categorical Variables
+##One Variable (Univariate)
+The main graphical summary for one categorical variable is a **bar plot.** 
+
+- The **height** of the bars is the only part that shows the data (width is meaningless here). 
+- The height can either represent the **frequency** (count of cases) or the **relative frequency** (proportion of cases).
+
+```{r}
+dat <- read.csv('SFPD.csv')
+(tab <- sort(table(dat$Category), decreasing=TRUE)) #Frequency table
+barplot(tab[1:10], las = 2, cex.names= .5, col='darkblue', main='Bar Plot (Frequency)',ylab='Frequency')
+barplot(prop.table(tab)[1:10], las = 2, cex.names= .5, col='darkblue', main='Bar Plot (Relative Frequency)',ylab='Relative Frequency')
+```
+
+A good summary of why **I hate pie charts**: http://www.businessinsider.com/pie-charts-are-the-worst-2013-6 (make sure to read if you like pie charts!)
+
+#Categorical Variables
+##Two Variables (Bivariate)
+The best (my opinion) graphical summary for the relationship between two categorical variables is a **mosaic plot**.
+
+- The **relative height** of the bars shows the conditional distribution (relative frequency within subsets).
+- The **width** of the bars shows the marginal distribution (relative frequency of the X variable, ignoring the other variable).
+
+```{r, tidy=TRUE}
+dat$DayOfWeek <- factor(dat$DayOfWeek,levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+(tab2 <- table(dat$DayOfWeek,dat$PdDistrict)) #Contingency table
+mosaicplot(tab2, las = 2, col=rainbow(9), main='Mosaic Plot (Condition on Day)')
+(tab3 <- table(dat$PdDistrict,dat$DayOfWeek)) #Contingency table
+mosaicplot(tab3, las = 2, col=rainbow(7), main='Mosaic Plot (Condition on District)')
+```
+
+
+
+#Quantitative Variables
+##One Variable (Univariate)
+The main graphical summary for one quantitative variable is a **histogram**. 
+
+- The **height** of the bars shows either the **frequency within intervals** or the **density** (count per width of interval)
+- The x-axis is a number line and bars do not have to be of equal width (R defaults to equal width, but you can change how many intervals and how large they are)
+
+```{r, tidy=TRUE}
+bodyfat <- read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/bodyfat.txt")
+hist(bodyfat$Wrist, col="lightblue",main="",ylab="# of men",xlab='Wrist circumference (cm)')
+
+hist(bodyfat$Wrist, col="lightblue",main="",ylab="# of men",xlab='Wrist circumference (cm)', breaks = seq(15,22,by = 0.05)) #Gaps are meaningful
+```
+
+We focus on three aspects of the distribution:
+
+- Shape: is it **symmetric**? or **skewed to the right or left** (skewed to the **tail**)? How many **modes** do you see?
+- Center: where is a typical value located?
+- Spread (or variation): how spread out is the distribution?
+
+Also, we ask
+– are there any unusual features such as outliers or gaps?
+
+```{r, tidy=TRUE}
+ceo <- read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/CEO_Salary_2012.txt")
+hist(ceo$X1.Year.Pay...mil.,col="light green",main="",xlab="Salary (in $M)",ylab="# of CEOs")
+```
+
+For center we have some choices for numerically summarizing it:
+
+- **Mean**: the sum of the observations divided by the sample size, $\bar{y} = \frac{\sum^n_{i=1}y_i}{n}$
+    + Sensitive to outliers, but efficiently uses all the data
+- **Median**: the "middle" value. The number for which half the values are below and half are above.
+    + Insensitive to outliers, but doesn’t use all the actual values
+- **Trimmed means**:  Drop the lowest and highest k% and take the mean of the rest
+    + A good compromise, but not widely used.
+
+```{r, tidy=TRUE}
+summary(bodyfat$Wrist)
+mean(bodyfat$Wrist)
+median(bodyfat$Wrist)
+mean(bodyfat$Wrist,trim = 0.05) #Trim 5% from both ends
+
+
+summary(ceo$X1.Year.Pay...mil.)
+mean(ceo$X1.Year.Pay...mil.)
+median(ceo$X1.Year.Pay...mil.)
+mean(ceo$X1.Year.Pay...mil.,trim = 0.05) #Trim 5% from both ends
+```
+
+For spread we have several choices to numerically describe it:
+
+- **Range**: the max - the min.
+    + Sensitive to the outliers since it’s the difference of the extremes
+- **IQR**: the interquartile range : Q3 - Q1 (75th percentile - 25th percentile).
+    + Like the median. Less sensitive, but less "efficient"
+- **Standard deviation**: Root mean squared deviations from mean, $s = \sqrt{\frac{\sum^n_{i=1}(y_i-\bar{y})^2}{n-1}}$
+    + Uses all the data but very sensitive to outliers and skewed data.
+
+```{r, tidy=TRUE}
+diff(range(bodyfat$Wrist)) #range gives max and min; take difference
+IQR(bodyfat$Wrist)
+sd(bodyfat$Wrist)
+
+diff(range(ceo$X1.Year.Pay...mil.))
+IQR(ceo$X1.Year.Pay...mil.)
+sd(ceo$X1.Year.Pay...mil.) 
+```
+
+#Summary for Quantitative Variables
+
+For a quantitative variable,
+
+- Use a histogram to display the distribution and describe the shape and any unusual features.
+- For “well behaved” distributions (symmetric, unimodal, no outliers) use the mean and standard deviation to describe the center and spread.
+- For others, use the IQR and median. You can report both mean and median, but it’s usually a good idea to state why.
+

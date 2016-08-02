@@ -1,0 +1,286 @@
+---
+title: "Stat 201 - Lecture 12"
+author: "Prof. Heggeseth"
+date: "October 27, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+
+---------------------
+
+##Probabilities from Contingency Tables
+
+Imagine we randomly selected a movie from this data set: 
+
+```{r}
+require(mosaic)
+data(movies)
+moviedata = movies[movies$mpaa != "",]
+nrow(moviedata)
+moviedata$mpaa = factor(moviedata$mpaa)
+with(moviedata, table(Comedy,mpaa))
+with(moviedata, table(Comedy))
+with(moviedata, table(mpaa))
+```
+
+Let **A** be the movie is a Comedy and **B** be the movie is R rated.
+
+
+- $P(A) = \frac{1662}{4924} = 0.34$
+
+- $P(A \cap B) = \frac{916}{4924} = 0.19$
+
+- $P(A \cup B) = \frac{1662+ 2461}{4924} = \frac{1662 + 3377 - 916}{4924} = 0.84$ We subtract due to the double counting of R-rated Comedies $(A \cap B )$
+
+- $P(A ~|~ B) = \frac{916}{3377} = \frac{916/4924}{3377/4924} = 0.27$
+
+
+------------------------
+
+##Probability Rules
+
+**General Addition Rule** (OR)
+
+\[P(A \cup B) = P(A) + P(B) - P(A \cap B)\]
+
+- Subtraction deals with double counting
+
+**General Multiplication Rule** (AND)
+
+- The conditional probability of A GIVEN B generalizes to
+\[P(A ~| ~B) = \frac{P(A \cap B)}{P(B)}\]
+
+so the multiplication rule is
+
+$$P(A \cap B) =  P(A ~| ~B) P(B)$$ 
+
+
+**Independence**
+
+If $A$ and $B$ are **independent** random events then:
+
+$$P(A \cap B) = P(A)P(B)$$
+
+Thus, the probability of A is not impacted by B,
+\[P(A ~| ~B)  = P(A) \]
+
+This is a mathmatical definition and is absolutely precise.
+
+Later in the course, we'll check whether the probabilities are close enough to consider them as independent.
+
+
+-------
+
+#Disjoint and Independent -- What's the difference?
+
+**Disjoint**:  Two events **A** and **B** are disjoint if $\bf{A} \cap \bf{B} = \emptyset$  and so $P(\bf{A} \cap \bf{B})=0$
+
+**Independent**: Two events **A** and **B** are **independent** if and only if $P(\bf{A} \cap \bf{B}) = \it{P}(\bf{A})\it{P}(\bf{B})$. Note that if  **A** and **B** are **independent**, then $P(\bf{A} ~| ~\bf{B}) = {P}(\bf{A})$ (plug in the above into definition of conditional probability).
+
+##Relationship between them
+Suppose **A**, **B**, **C**, **D** and **E** are the possible grades that your friend received in this course last semester. We might not know $P(\bf{B})$, but if I told you she got an **A**, what is $P(\bf{B}~|~\bf{A})$?  
+
+**Are these events disjoint?**
+
+**Are these events independent?**
+
+-------
+
+#Disjoint and Independent -- What's the difference?
+
+##Mathematical Relationship
+For disjoint sets **A** and **B**,   $P(\bf{A} \cap \bf{B})=0$ and so $\it{P}(\bf{A} | \bf{B})= \frac{\it{P}(\bf{A} \cap \bf{B})}{\it{P}(\bf{B})} =0 \ne {\it{P}(\bf{A})}$  and so they aren't independent.
+	
+Conversely, if two non-empty sets are independent, then they can't disjoint.  
+
+Why? 
+
+Because if they are independent  $P(\bf{A} \cap \bf{B}) = P(\bf{A})P(\bf{B})$ which can't be 0 because both ${P(\bf{A}})$ and ${P(\bf{B}})~~\text{are} > 0$. And so $P(\bf{A} \cap \bf{B}) = \it{P}(\bf{A})\it{P}(\bf{B}) >0$ , which means that the intersection is non-empty and the two sets aren't disjoint. 
+
+-------------
+
+#Random Variables
+
+Let $X:S\rightarrow E$ be a function that assigns a element of $E$ to each element of the sample space. Often, $E$ will be $\mathbb{R}$.
+
+- $X$ is a random variable (yes, it is a function), a variable whose value is random.
+- We will always notate random variables with capital letters! 
+
+**Discrete Random Variables (RV)** have a countable number of possible values. 
+
+**Continuous Random Variables (RV)** have an uncountable number of possible values. 
+
+The **probability model** for a discrete RV includes all possible values and their associated probabilities. 
+
+##Examples
+
+- Toss of a six-sided die. Let $X$ be the number showing on the die. 
+    - Possible values of $X$ are 1,2,3,4,5,6 and each has a probability of 1/6 (assuming it is fair with equal probabilities). 
+
+- Toss a biased coin such that P(heads) = p. Let $Y$ = number of tosses until heads first appears. Note: flips are independent in that P(heads on first and heads on second) = $p^2$.
+    - Possible values of $Y$ are 0,1,2,3,4,....
+    - $P(Y = 1) = p$, $P(Y=2) = (1-p)p$,....
+    
+A **Probability Mass Function (pmf)** shows the probability for every possible value of a RV,
+
+\[p_X(x) = P(X = x) \]
+
+- For the biased coin example, the pmf is
+\[p_Y(y) = P(Y = y) = (1-p)^{y-1}p \]
+
+This type of random variable is called a **Geometric Random Variable**.
+
+-------------
+
+#Some Counting
+
+If I am packing for vacation, how many outfits can I make with 5 shirts, 3 pants, 3 accessories?
+
+-------------
+
+#Some Counting
+
+
+
+Example: With A, G, C, T DNA nucleotide bases, how many 3 letter "words" can you make?
+
+Example: How many ways can we select 5 people to provide answers in class?
+
+
+>- **Have n objects and want to select k of them with replacement, caring about order:**
+
+>- \[n^k\]
+
+-------------
+
+#Some Counting
+
+
+Example: With A, G, C, T DNA nucleotide bases, how many 3 letter "words" can you make such that you don't repeat any letter in the word?
+
+Example: How many ways can we select 5 people to provide answers in class (such that they only have to go once)?
+
+>- **Have n objects and want to select k of them without replacement, caring about order:**
+
+>- \[n (n-1) (n - 2)\cdots (n-k+1)\]
+
+
+-------------
+
+#Some Counting
+
+
+Example: How many ways can you reorder the letters CAGT to create a new "word"?
+
+Example: How many ways can we arrange 5 people in a line?
+
+
+>- **Have k objects and want to select k of them without replacement, caring about order (Permutations):**
+
+>- \[k(k-1)(k-2)\cdots 2 \cdot 1 = k!\]
+
+
+-------------
+
+#Some Counting
+
+Example:  With A, G, C, T DNA nucleotide bases, how many ways can you select 2 bases?
+
+Example: How many 5 card hands can we draw from a 52 card deck?
+
+
+
+>- **Have n objects and want to select k of them without replacement, without caring about order (Combinations):**
+
+>- \[\frac{n!}{(n-k)!k!} = \frac{n (n-1) (n - 2)\cdots (n-k+1)}{k!}\]
+
+
+----------
+
+#Bernoulli Trials
+
+- Independent Trials
+- Two possible outcomes on each trial (success or failure)
+- P(success) = p is constant
+
+**Geometric RV**: $X$ is the number of trials to the first success
+
+**Binomial RV**: $X$ is the total number of success in $n$ trials
+
+What is the pmf of a Binomial?
+
+
+----------
+
+#Moment of Discrete Random Variables
+- Expected Value: long-run average
+\[ E(X) = \sum_{\text{all } x}xp_X(x)\]
+
+- Expected Value of a function of $X$
+\[ E(g(X)) = \sum_{\text{all } x}g(x)p_X(x)\]
+\[ E(X^2) = \sum_{\text{all } x}x^2p_X(x)\]
+
+- Variance: variability of a random variable
+\[ Var(X) = E((X - E(X))^2) = E(X^2) - [E(X)]^2\]
+
+
+##Example 1
+
+Which of the following investment strategies would you pick?
+
+1. No risk: 3% guaranteed
+2. Low risk: P(1%) = 0.3, P(2%) = 0.2, P(4%) = 0.2, P(5%) = 0.3
+3. High risk: P(-17%) = 0.3, P(-7%) = 0.2, P(13%) = 0.2, P(23%) = 0.3
+
+Find the expected return for each. 
+
+##Example 2
+
+What is $E(X)$ for a Bernoulli trial?
+
+What is $Var(X)$ for a Bernoulli trial?
+
+-----------
+
+#Properties of Moments
+
+Let $a$ be constant (not random).
+
+\[ E(aX) = \sum_{\text{all }x} axp_X(x) = a\sum_{\text{all }x} xp_X(x)  = aE(X)\]
+
+\[ E(X + b) = \sum_{\text{all }x} (x+b)p_X(x) = \sum_{\text{all }x} xp_X(x) + \sum_{\text{all }x} bp_X(x)  = E(X) + b\]
+
+\[ Var(aX) = E(a^2X^2) - [E(aX)]^2 = a^2E(X^2) - [aE(X)]^2 = a^2(E(X^2) - [E(X)]^2) = a^2Var(X)\]
+
+\[ Var(X + b) = E((X+b)^2) - [E(X+b)]^2= E(X^2+2bX+b^2) - [E(X)^2+2bE(X)+b^2]= E(X^2)+2bE(X)+b^2 - E(X)^2-2bE(X)-b^2 = Var(X) \]
+
+##Two RV's
+
+Let $X$ and $Y$ be RV's.
+
+\[E(X+Y) = E(X)+E(Y)\]
+
+\[Var(X+Y) = Var(X)+Var(Y)\text{ if }X\text{ and } Y\text{ are independent }\]
+
+The **joint probability mass function** for two random variables is
+
+\[p_{X,Y}(x,y) = P(X = x \text{ and }Y=y) \]
+
+
+Proofs:
+
+\[E(X+Y) = \sum_{\text{all }x}\sum_{\text{all }y}(x+y)p_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}\sum_{\text{all }y}xp_{X,Y}(x,y)+\sum_{\text{all }x}\sum_{\text{all }y}yp_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}x\sum_{\text{all }y}p_{X,Y}(x,y)+\sum_{\text{all }y}y\sum_{\text{all }x}p_{X,Y}(x,y)\]
+\[ = \sum_{\text{all }x}xp_{X}(x)+\sum_{\text{all }y}yp_{Y}(y)\]
+\[ = E(X)+E(Y)\]
+since  
+\[\sum_{\text{all }x}p_{X,Y}(x,y) = \sum_{\text{all }x}P(X = x\text{ and }Y=y)\]
+\[= \sum_{\text{all }x}P(X = x~|~Y=y)P(Y=y)\]
+\[= P(Y=y)\sum_{\text{all }x}P(X = x~|~Y=y)\]
+\[= P(Y=y)=p_Y(y)\]
+

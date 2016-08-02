@@ -1,0 +1,316 @@
+---
+title: "Stat 201 - Lecture 7"
+author: "Prof. Heggeseth"
+date: "October 1, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+
+-----------
+
+##Cars Transformation Example
+
+
+```{r, fig.height=5, fig.width=10}
+library(MASS)
+par(mfrow=c(1,2))
+with(Cars93,plot(MPG.city~Weight,pch=19,bty="n",cex=.8))
+lm.cars=lm(MPG.city~Weight,data=Cars93)
+abline(lm.cars,lwd=2)
+with(Cars93,hist(MPG.city,col="lightgreen"))
+
+
+Hummer=data.frame(Weight=6280)
+
+predict(lm.cars,new=Hummer)
+```
+This doesn't predict very well for a Hummer!  
+
+
+---
+
+##Residuals
+
+```{r}
+scatter.smooth(residuals(lm.cars)~predict(lm.cars),pch=19,cex=.6,bty="n")
+```
+
+---
+
+## Back to the Scatterplot
+
+Which part of the circle does the scatterplot most resemble?
+
+```{r,echo=FALSE}
+with(Cars93,scatter.smooth(MPG.city~Weight,pch=19,bty="n",cex=.8))
+```
+
+
+The scatterplot looks like the lower left (3rd) quadrant. Tukey says to go down the ladder in $y$ (or $x$) (look at the arrows in each quadrant -- they match the sign of $x$ and $y$ there.)
+
+-----------
+
+##Down the Ladder
+
+ Try going down one "rung" in $y$ to $\sqrt{MPG.City}$
+ 
+```{r, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+with(Cars93,scatter.smooth(sqrt(MPG.city)~Weight,pch=19,cex=.6,bty="n"))
+lm.sq = lm(sqrt(MPG.city)~Weight,data = Cars93)
+scatter.smooth(predict(lm.sq),residuals(lm.sq),pch=19,cex=.6,bty="n")
+```
+
+It's better, but we should go further.
+
+---
+
+##Try $log{(MPG.City)}$
+
+```{r, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+with(Cars93,scatter.smooth(log(MPG.city)~Weight,pch=19,cex=.6,bty="n"))
+lm.log = lm(log(MPG.city)~Weight,data = Cars93)
+scatter.smooth(predict(lm.log),residuals(lm.log),pch=19,cex=.6,bty="n")
+```
+
+
+Always go so further so that you actually have to come back.
+
+---
+
+##Try $\frac{-1}{MPG.City}$
+
+```{r, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+with(Cars93,scatter.smooth(-1/(MPG.city)~Weight,pch=19,cex=.6,bty="n"))
+lm.inv = lm(I(-1/(MPG.city))~Weight,data = Cars93)
+scatter.smooth(predict(lm.inv),residuals(lm.inv),pch=19,cex=.6,bty="n")
+```
+
+----------
+
+##Are we there yet?
+
+This looks good -- let's go one more.
+
+```{r, fig.height=5, fig.width=10}
+par(mfrow=c(1,2))
+with(Cars93,scatter.smooth(-1/(MPG.city^2)~Weight,pch=19,cex=.6,bty="n"))
+lm.inv2 = lm(I(1/(MPG.city)^2)~Weight,data = Cars93)
+scatter.smooth(predict(lm.inv2),residuals(lm.inv2),pch=19,cex=.6,bty="n")
+```
+
+We've probably gone too far. Back to $-1/MPG$.
+
+---
+
+##Can we find an automatic method?
+
+**Box and Cox**
+
+History: George Box and Sir David Cox
+
+![](http://funeralinnovations.com/img/obits/large/114698_r1opq1msx5r44x0jq.JPG)
+
+![](http://www.soph.uab.edu/ssg/files/endowments/davidcox/david_cox2.jpg)
+
+The Joke: https://en.wikipedia.org/wiki/Box_and_Cox
+
+
+Statistical Method:
+
+Here's the idea. We want to find the "best" power according to some criterion. It's roughly finding the power that minimizes the sum of squared residuals (think maximizing correlation) in the transformed units. 
+
+
+
+----------
+
+#Box-Cox for Cars
+
+If we try a whole bunch of powers ($\lambda$'s) and plot how they did in a graph, the "best" $\lambda$ is the one that maximizes this criteria.
+
+BUT all the $\lambda$ between the dotted line did statistically as well as the best. So only use this as a guide!! 
+
+Box and Cox proved some properties of this method, but that's not the most important point. It can serve as a rough guide of where to start.
+
+
+```{r}
+lm.cars = lm(MPG.city~Weight,data = Cars93) 
+boxcox(lm.cars)
+```
+
+Somewhere around $\lambda = -1.25$ is optimal, but all powers between about $-.75$ and $-1.75$ are statistically as good. $-1$ is convenient (and makes sense) so we'll go with that. 
+
+
+---
+
+##Transforming Back
+
+Once we transform a response and fit the line what do we do then?
+
+For example,
+
+```{r}
+lm.recip=lm(I(-1/MPG.city)~Weight,data=Cars93)
+Hummer=data.frame(Weight=6280)
+predict(lm.cars,new=Hummer) # Not a good prediction ...
+predict(lm.recip,new=Hummer) # A better prediction -- but what does it mean? 
+-1/predict(lm.recip,new=Hummer)  #Aha!
+```
+
+------
+
+##Bootstrapping a prediction
+
+```{r}
+library(mosaic)
+preds=do(1000)*predict(lm(I(-1/MPG.city)~Weight,data=resample(Cars93)),new=Hummer)
+Hummer.predmpg=-1/preds[,1]
+hist(Hummer.predmpg)
+quantile(Hummer.predmpg,c(0.025,0.975))
+```
+
+
+
+-----
+
+##Things to remember 
+
+-We're trying to straighten the lines (and equalize spread) with transformations
+
+-Don't forget to look at residual plots after tranforming
+
+-And don't forget to transform the predictions back! (No one wants the prediction of $-1/\sqrt{revenue}$)
+
+- **All models are wrong, some are useful - George Box**
+
+
+-----
+
+##Outliers
+
+Points could be "unusual" because of their x value and/or their y value.
+
+https://www.google.com/search?q=outliers&espv=2&biw=1276&bih=682&source=lnms&tbm=isch&sa=X&ved=0CAcQ_AUoAmoVChMIqO27sMWhyAIVzBkeCh2bdAZH#tbm=isch&q=outliers+scatterplot
+
+A point that is far from the mean of x has **high leverage**, the power to impact the line (think of a physical lever).
+
+![](http://etc.usf.edu/clipart/35900/35944/lever_35944_md.gif)
+
+A point is **influential** if its inclusion or exclusion changes the line.
+
+- Influential points have to have high leverage and large residuals. 
+
+```{r}
+indx <- !(Cars93$MPG.city > 45 & Cars93$Weight < 2000)
+
+subdat <- Cars93[indx,] 
+```
+
+
+-----
+
+##Groups in Regression
+
+Childhood Growth and Development (my research application area!)
+
+```{r}
+load('Kids198.rda')
+plot(Weight~Age,data = Kids198,xlab='Age (in months)')
+lm.growth = lm(Weight~Age,data=Kids198)
+abline(lm.growth)
+summary(lm.growth)
+
+scatter.smooth(predict(lm.growth),residuals(lm.growth),xlab='Predicted Weight')
+```
+
+What do you think?
+
+-----
+
+##Groups in Regression
+
+Should there be two lines?
+
+```{r}
+colpalette = c('blue','red')
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)',pch=19)
+```
+
+
+-----
+
+##Groups in Regression
+
+We can fit two parallel lines (different intercepts, same slope) by adding an **indicator variable** for Sex in the model.
+\[ \widehat{Weight} = b_0 + b_1 Age + b_2 1_{Female}\]
+
+where 
+\[ 1_{Female} = \begin{cases}
+1\quad \text{for Female}\\
+0 \quad \text{for Male}
+\end{cases}\]
+
+So, for males the line is
+
+\[ \widehat{Weight} = b_0 + b_1 Age \]
+
+
+So, for females the line is
+
+\[ \widehat{Weight} = (b_0 + b_2) + b_1 Age \]
+
+-----
+
+##Groups in Regression
+
+```{r}
+head(Kids198$Sex) #Sex is already an indicator variable
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)')
+lm.par = lm(Weight~Age + Sex, data = Kids198)
+abline(a = coef(lm.par)[1],b = coef(lm.par)[2],col='blue',lwd=3)
+abline(a = coef(lm.par)[1]+coef(lm.par)[3],b = coef(lm.par)[2],col='red',lwd=3)
+
+summary(lm.par)
+```
+
+Notice the improvement in $R^2$ and $s_e$!
+
+Could we do better?
+
+
+
+-----
+
+##Groups in Regression
+
+What is we want to allow the slopes to differ?
+
+We can use interactions!!!
+
+\[ \widehat{Weight} = b_0 + b_1 Age + b_2 1_{Female} + b_3 1_{Female}*Age\]
+
+So, for males the line is
+
+\[ \widehat{Weight} = b_0 + b_1 Age \]
+
+
+So, for females the line is
+
+\[ \widehat{Weight} = (b_0 + b_2) + (b_1 +b_3) Age \]
+
+
+```{r}
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)',pch=19)
+lm.int = lm(Weight~Age*Sex, data = Kids198)
+
+abline(a = coef(lm.int)[1],b = coef(lm.int)[2],col='blue',lwd=3)
+abline(a = coef(lm.int)[1]+coef(lm.int)[3],b = coef(lm.int)[2] + coef(lm.int)[4],col='red',lwd=3)
+
+summary(lm.int)
+```

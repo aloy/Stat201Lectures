@@ -1,0 +1,125 @@
+---
+title: "Stat 201 - Lecture 9"
+author: "Prof. Heggeseth"
+date: "October 8, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+----------
+
+#Which Variables to Include?
+
+We saw last lecture how including more variables can help us get a more "accurate" understanding of relationships because we are keeping variables constant ("comparing apples to apples").
+
+Let's throw all the body measurements in to see the relationships with Percent Body Fat.
+
+```{r}
+library(car)
+bodyfat = read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/bodyfat.txt")
+
+bodyfat$BMI = (bodyfat$Weight*0.453592) /(bodyfat$Height*0.0254)^2
+
+lm.full = lm(Pct.BF~.,data=bodyfat)
+summary(lm.full)
+avPlots(lm.full)
+```
+
+How do we choose which variables are "important"?
+
+----------
+
+#Criteria
+
+- Can't have more variables than there are cases ($n<p$).
+- Want small SSE (better predictions).
+- Want $R^2$ high (Issue: $R^2$ will always increase or stay the same with more variables)
+- Want adjusted $R^2$ high (we add a little penalty for having too many variables in the model)
+- Want variables included to "be associated with" body fat even after accounting for other variables (they need to contribute!)
+
+
+----------
+
+#Backwards Elimination
+
+Starting with a full model, we could eliminate variables one at a time that don't "help" the model. 
+
+Run models leaving out one variable at a time, and then compare by a criterion.
+
+
+Criterion Options:
+
+- Use adjusted $R^2$
+- t-values (SD's away from 0 to account for sampling variablilty)
+- AIC, which is SSE with a penalty for too many variables (want small)
+
+
+```{r}
+lm.step=step(lm.full) #Default: uses AIC
+summary(lm.step)
+```
+
+
+----------
+
+#Review
+
+##Graphical and Numerical Summaries
+
+**One Categorical Var**
+
+- Frequency Tables (and Relative Frequencies)
+- Barplots
+
+**One Quantitative Var**
+
+- 5-number summary
+- Center: median, mean, trimmed mean
+- Spread: IQR, sd, range
+- Z-scores
+- How usual are z-scores? (Chebyshev and 68-95-99.7 rule)
+- Shifting and Scaling impact on summary statistics
+- Histograms (shape, QQ plots to compare to Normal)
+- Boxplots (outliers..)
+
+**Two Categorical Var**
+
+- Contingency table
+- Mosaic plots
+
+**One Categorical Var, One Quantitative Var**
+
+- Mean, SD, Median, IQR within groups
+- Multiple Boxplots
+
+**Two Quantitative Var**
+
+- Scatterplots
+- Correlation
+- Shifting and Scaling impact on correlation
+- Regression Lines (simple)
+
+##Linear Models
+
+**Regression**
+
+- Least Squares (minimizing SSE)
+- Residuals
+- Interpreting Slope and Intercept
+- Standard deviation of residuals (idea of prediction error)
+- Regressing to the mean
+- Impact of outliers
+- Conditions and Diagnostics (residual plots, added variable plots)
+- Transformations (Ladder of Powers and Box-Cox)
+
+##Sampling Variability
+
+- Sampling Distribution from Population (center and spread)
+- Bootstrapping Sampling Distribution (center and spread)
+- Bootstrap Confidence Intervals
+- "Shuffling" groups to test a hypothesis (assume no difference)
+
+

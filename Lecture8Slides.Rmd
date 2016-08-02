@@ -1,0 +1,239 @@
+---
+title: "Stat 201 - Lecture 8"
+author: "Prof. Heggeseth"
+date: "October 6, 2015"
+output: slidy_presentation
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(dev='png',fig.path='Figs/',echo=TRUE,message=FALSE, warning=FALSE,message=FALSE,tidy=TRUE,fig.width = 6,fig.height=6)
+```
+
+-----
+
+##Parallel Lines
+
+We can fit two parallel lines (different intercepts, same slope) by adding an **indicator variable** for Sex in the model.
+\[ \widehat{Weight} = b_0 + b_1 Age + b_2 1_{Female}\]
+
+where 
+\[ 1_{Female} = \begin{cases}
+1\quad \text{for Female}\\
+0 \quad \text{for Male}
+\end{cases}\]
+
+So, for males the line is
+
+\[ \widehat{Weight} = b_0 + b_1 Age \]
+
+
+So, for females the line is
+
+\[ \widehat{Weight} = (b_0 + b_2) + b_1 Age \]
+
+```{r}
+load('Kids198.rda')
+colpalette = c('blue','red')
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)',pch=19)
+lm.par = lm(Weight~Age + Sex, data = Kids198)
+abline(a = coef(lm.par)[1],b = coef(lm.par)[2],col='blue',lwd=3)
+abline(a = coef(lm.par)[1]+coef(lm.par)[3],b = coef(lm.par)[2],col='red',lwd=3)
+summary(lm.par)
+```
+
+How can we interpret these coefficients (besides as two lines)?
+
+- Effect of variable (average change in Y for a 1 unit increase in X), keeping other variables constant.
+
+
+-----
+
+##Real Difference?
+
+Let's bootstrap!
+
+```{r}
+require(mosaic)
+bootlm = do(1000)*lm(Weight~Age + Sex,data=resample(Kids198))
+hist(bootlm[,3],xlab='Intercept Difference',main='')
+quantile(bootlm[,3],c(0.025,0.975))
+sd(bootlm[,3])
+```
+
+Which means, “We are 95% confident that the true mean difference in weight across all ages (note the parallel lines) between boys and girls is between 7 and 18 lb."
+
+If we had the two populations (boys and girls), we could calculate the actually difference in mean weight between boys and girls of similar age. But we don't.
+
+Notice that the standard deviation for $b_2$ from the bootstrap simulation is around 2.9 lbs. Now look back a the summary from lm(). You’ll notice that the “standard error” of Sex is 2.81 lbs. Coincidence? Hardly. 
+
+The summary() is using statistical theory to judge the sampling variability. We simulated it. Both show that the value of 12.78 lbs that we estimated for the difference between boys and girls is an unlikely value to see if there were no difference. It’s about 4.55 standard deviations (errors) away from 0. That’s the t−value listed in the summary.
+
+-----
+
+##Two Lines, One Model
+
+What is we want to allow the slopes to differ?
+
+We can use interactions!!!
+
+\[ \widehat{Weight} = b_0 + b_1 Age + b_2 1_{Female} + b_3 1_{Female}*Age\]
+
+So, for males the line is
+
+\[ \widehat{Weight} = b_0 + b_1 Age \]
+
+
+So, for females the line is
+
+\[ \widehat{Weight} = (b_0 + b_2) + (b_1 +b_3) Age \]
+
+
+```{r}
+plot(Weight~Age,col = colpalette[as.factor(Sex)],data = Kids198,xlab='Age (in months)')
+lm.int = lm(Weight~Age*Sex, data = Kids198)
+
+abline(a = coef(lm.int)[1],b = coef(lm.int)[2],col='blue',lwd=3)
+abline(a = coef(lm.int)[1]+coef(lm.int)[3],b = coef(lm.int)[2] + coef(lm.int)[4],col='red',lwd=3)
+
+summary(lm.int)
+```
+
+How can we interpret these coefficients?
+
+- Can't keep all other variables constant.
+- Describe Sex's "effect" on slope and intercept.
+
+
+-----
+
+##Do we need two lines?
+
+Let's bootstrap!
+
+```{r}
+require(mosaic)
+bootlm2 = do(1000)*lm(Weight~Age*Sex,data=resample(Kids198))
+hist(bootlm2[,3],xlab='Intercept Difference',main='')
+hist(bootlm2[,4],xlab='Slope Difference',main='')
+```
+
+Where is 0 relative to all of the bootstrapped values?
+
+
+--------
+
+##Multiple regression with quantitative variables
+
+
+Who’s carries less fat, tall guys or short guys?
+
+```{r}
+bodyfat = read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/bodyfat.txt")
+plot(Pct.BF~Height,pch=19,data=bodyfat)
+```
+
+No relationship. 
+
+What % body fat would you predict for a guy who is 64 inches tall?
+
+What about for a guy who is 76 inches tall?
+
+
+But what if you also know he wears a 36" pant. For a guy 6′6" that’s not big, but for a guy 5′ tall that’s pretty round…
+
+Let’s highlight the guys with pant size between 34 and 36 inches:
+
+```{r}
+plot(Pct.BF~Height,data=bodyfat,cex=.6)
+points(Pct.BF~Height,data = bodyfat[(bodyfat$Waist >=34)&(bodyfat$Waist<=36),],col="red",pch=19,cex=1.1)
+lm.bf34=lm(Pct.BF~Height,data=bodyfat[(bodyfat$Waist >=34)&(bodyfat$Waist<=36),])
+abline(lm.bf34,col="red",lwd=2)
+```
+
+So amongst men with roughly the same pant size, there is a relationship between Height and Percent Body fat!!
+
+
+Here is another way we could visualize this, we can break all the men into four groups with similar pant sizes (based on quantiles)
+```{r}
+library(lattice)
+panel.smoother <- function(x, y) {
+  panel.xyplot(x, y) # show points 
+  panel.loess(x, y)  # show smoothed line
+}
+WaistCat=cut(bodyfat$Waist,favstats(bodyfat$Waist)[1:5]) #Cut Waist into quantile intervals (make it a categorical variable)
+xyplot(Pct.BF~Height|WaistCat,data=bodyfat, scales=list(cex=.8, col="red"),panel=panel.smoother)
+```
+
+-----------
+
+#Update our Model
+
+Now, we are going to add a second quantitative variable to our linear model. 
+
+We have gone beyond straight lines in a scatterplot.
+
+```{r}
+lm.bf2=lm(Pct.BF~Height+Waist,data=bodyfat)
+summary(lm.bf2)
+```
+
+Multivariate intuition: We are now fitting a plane in 3D space (rather than a line in 2D).
+
+```{r}
+#library(rgl)
+#plot3d(bodyfat[,c('Waist','Height','Pct.BF')])
+```
+
+Statistical intuition: We are able to compare men of similar Waist (i.e. accounting for Waist size) by adding Waist in the model.
+
+
+
+-----------
+
+#Contributions of New Variables
+
+When we have more than one X variable, we can see how what relationships exist between each variable and the outcome, after accounting for other variables. 
+
+
+The added-variable plots give us exactly this. 
+
+```{r}
+library(car)
+avPlots(lm.bf2,marginal.scale=TRUE)
+```
+
+After accounting for Waist, we can see the 'leftover' relationship between Height and Percent body fat.
+
+After accounting for Height, we can see the 'leftover' relationship between Height and Percent body fat.
+
+
+-----------
+
+#Another Example
+
+How do the number of bedrooms impact the price of a house?
+
+```{r}
+real.estate <- read.delim("http://sites.williams.edu/rdeveaux/files/2014/09/Real.Estate.txt")
+
+plot(Price~jitter(Bedrooms,5),data=real.estate)
+lm.r2=lm(Price~Bedrooms,data=real.estate)
+abline(lm.r2,col="red",lwd=3)
+```
+
+What about if we compare houses of similar sizes?
+
+
+```{r}
+lm.r3=lm(Price~Bedrooms+Living.Area,data=real.estate)
+lm.r3
+```
+
+Let's visualize the contribution. 
+
+```{r}
+avPlots(lm.r3,marginal.scale=TRUE)
+```
+
+How do we interpret these estimated coefficients?
+- Can't keep all other variables constant (try keeping the living area constant and adding a bedroom).
